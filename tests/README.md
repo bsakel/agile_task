@@ -7,7 +7,7 @@ Microsoft.Testing.Platform (`global.json`), assertions use Shouldly.
 |---|---|---|
 | `OrderPlatform.Architecture.Tests` | Module boundaries and layering (ArchUnitNET and `ProjectReference` rules), handler coverage and naming, explicit Marten document and event registration, pinned stored message/event names (`contract-names.approved.txt`) — ADR-0015 | Nothing |
 | `OrderPlatform.Migrations.Tests` | Expand/contract and online-safety rules for every DbUp script and for the generated Marten patch — ADR-0009 | Nothing |
-| `OrderPlatform.Api.IntegrationTests` | Acceptance criteria of PRs 1a and 1b: Migrator, startup guards, authentication, idempotency, problem details, feature flags, OTLP traces | Docker |
+| `OrderPlatform.Api.IntegrationTests` | Acceptance criteria of PRs 1a and 1b: Migrator, startup guards, authentication, idempotency, problem details, feature flags, OTLP traces; a module's seeded data read through its contracts against the Migrator-built schema (PR 2b) | Docker |
 | `OrderPlatform.AppHost.Tests` | The Aspire AppHost runs the Migrator to completion before the Api is ready | Docker, free port 8080 |
 | `OrderPlatform.Testing` | Shared infrastructure (not a test project) | — |
 

@@ -1,6 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Persistence, adapters to external systems, endpoints and the module registration. -->
   <ItemGroup>
+    <!-- Relational data access for this module's schema (ADR-0007). -->
+    <PackageReference Include="Dapper" />
+    <PackageReference Include="Npgsql" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Customers.Application\Customers.Application.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\OrderPlatform.BuildingBlocks.Infrastructure\OrderPlatform.BuildingBlocks.Infrastructure.csproj" />
   </ItemGroup>

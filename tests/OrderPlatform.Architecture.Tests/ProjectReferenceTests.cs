@@ -44,6 +44,20 @@ public sealed partial class ProjectReferenceTests
         }
     }
 
+    [Fact]
+    public void Only_the_Api_host_references_Microsoft_FeatureManagement()
+    {
+        var offenders = Directory
+            .GetFiles(Path.Combine(PlatformArchitecture.RepositoryRoot.FullName, "src"), "*.csproj", SearchOption.AllDirectories)
+            .Where(path => Path.GetFileNameWithoutExtension(path) != "OrderPlatform.Api")
+            .Where(path => XDocument.Load(path).Descendants("PackageReference")
+                .Any(package => package.Attribute("Include")?.Value.StartsWith("Microsoft.FeatureManagement", StringComparison.Ordinal) == true))
+            .Select(path => Path.GetRelativePath(PlatformArchitecture.RepositoryRoot.FullName, path))
+            .ToList();
+
+        offenders.ShouldBeEmpty("application code uses IFeatureFlags; only the Api host's adapter uses Microsoft.FeatureManagement (ADR-0019)");
+    }
+
     private static readonly string[] Layers = ["Domain", "Application", "Infrastructure", "Contracts"];
 
     private static bool IsAllowed(string module, string layer, string reference)

@@ -11,7 +11,8 @@ keycloak=http://localhost:8080/realms/orderplatform/protocol/openid-connect/toke
 fail() {
   echo "::error::$1"
   "${compose[@]}" ps -a || true
-  "${compose[@]}" logs --no-color migrator api keycloak | tail -n 300 || true
+  "${compose[@]}" logs --no-color migrator keycloak | tail -n 150 || true
+  "${compose[@]}" logs --no-color api | tail -n 150 || true
   exit 1
 }
 
@@ -32,8 +33,16 @@ migrator_exit=$(docker inspect "$("${compose[@]}" ps -a -q migrator)" --format '
 [ "$migrator_exit" = "0" ] || fail "Migrator exited with $migrator_exit"
 echo "✔ Migrator completed (exit 0) before the Api started"
 
-"${compose[@]}" logs --no-color api | grep -q "Using pre-generated Wolverine HandlerRegistry" \
-  || fail "Api did not start with pre-generated (static) Wolverine code"
+# The console logger writes asynchronously: readiness can be reported before the startup lines reach docker logs.
+static_mode=false
+for _ in $(seq 1 30); do
+  if "${compose[@]}" logs --no-color api | grep -q "Using pre-generated Wolverine HandlerRegistry"; then
+    static_mode=true
+    break
+  fi
+  sleep 1
+done
+$static_mode || fail "Api did not start with pre-generated (static) Wolverine code"
 echo "✔ Api runs pre-generated handler code (static mode)"
 
 token=$(curl -sf "$keycloak" -d grant_type=client_credentials -d client_id=acme-erp -d client_secret=acme-erp-dev-secret \

@@ -1,7 +1,7 @@
 # Implementation Plan
 
 Status: **Agreed** — all ADRs accepted. **Phase 0 completed** ([results](phase-0-results.md)); plan and ADRs updated
-with its findings. Phase 1: PR 1a merged; PR 1b in review. Next: PR 1c.
+with its findings. Phase 1: PRs 1a and 1b merged; PR 1c in review. Next: Phase 2.
 
 ## Guiding principles
 
@@ -159,6 +159,22 @@ Deliverables:
   rollback floor check, stubbed until a hosting platform is chosen.
 - Branch protection on `main` requiring the pull request pipeline to pass (in addition to manual review).
 
+Implementation notes (added in PR 1c):
+- `codegen test` replaced: it fails in Wolverine 6.38 regardless of our code. Generated code is proven by the image build
+  and the static-mode check in the compose smoke test (ADR-0021).
+- Added `OrderPlatform.AppHost.Tests` (Aspire.Hosting.Testing) for the PR 1a AppHost criterion (ADR-0022).
+- Message marker interfaces (`ICommand`, `IIntegrationEvent`, `IDomainEvent`) in `BuildingBlocks`, and pinned stored
+  names in `contract-names.approved.txt`, make handler coverage and alias stability checkable (ADR-0015).
+- The release compatibility job also runs the previous Api against the new schema: a first step towards the backlog item
+  "previous release's integration tests against the new schema".
+- **Branch protection is not available** for this private repository on the GitHub Free plan (branch protection and
+  rulesets both return `403 Upgrade to GitHub Pro or make this repository public`). The definition is ready in
+  `.github/branch-protection-main.json`: the three pull request jobs are required checks, a pull request is required, and
+  0 approvals because the owner reviews and merges their own PRs. The owner applies it after upgrading or making the
+  repository public:
+  `gh api -X PUT repos/bsakel/agile_task/branches/main/protection --input .github/branch-protection-main.json`.
+  Until then, merging only green PRs is a manual rule.
+
 Acceptance criteria:
 - A deliberately illegal cross-module reference fails the architecture tests.
 - A migration script containing `DROP COLUMN` outside the contract rules fails the migration tests; so does a volatile default.
@@ -312,3 +328,8 @@ Phase 0 findings incorporated (see [phase-0-results](phase-0-results.md)).
 - AppHost: pin a development Postgres password parameter. The generated password lives in user secrets; if they are
   reset, the persistent data volume no longer accepts it and the Migrator waits forever (seen while verifying PR 1b).
 - Forwarded headers behind the ingress so anonymous rate limiting partitions by the real client address (ADR-0016).
+- Report the `codegen test` compilation failure (static handler registry compiled without the handler files) to the
+  Wolverine project; add `codegen test` to CI once fixed (PR 1c, ADR-0021).
+- Tag the first release (`v0.1.0` or similar) so release compatibility compares against a release rather than the merge
+  base with main, and contract scripts can be checked against release tags (PR 1c, ADR-0009).
+- Apply branch protection on `main` once the plan or visibility allows it (`.github/branch-protection-main.json`, PR 1c).

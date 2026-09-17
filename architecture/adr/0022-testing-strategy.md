@@ -45,6 +45,22 @@ promise needs a test at the cheapest level that can actually prove it.
   recreating the database.
 - Tests do not depend on execution order or wall-clock time.
 
+### Implementation (PR 1c)
+
+- Projects: `OrderPlatform.Architecture.Tests`, `OrderPlatform.Migrations.Tests`, `OrderPlatform.Api.IntegrationTests`,
+  **`OrderPlatform.AppHost.Tests`** (added: `Aspire.Hosting.Testing` proves that the AppHost runs the Migrator to
+  completion before the Api is ready), and the shared library `OrderPlatform.Testing`. See `tests/README.md`.
+- xUnit v3 4.x runs on Microsoft.Testing.Platform v2; `global.json` selects that runner for `dotnet test`.
+- One PostgreSQL and one Keycloak container per run. The Migrator is run as a **process**, like the deployment job.
+- Process isolation where it matters:
+  - Startup guards run the Api as a process and assert its exit code.
+  - Trace export runs the Api as a process against a stand-in OTLP receiver. OpenTelemetry listeners are process-wide,
+    so an in-process test host exported the HTTP and database activity of other tests (seen while implementing).
+- Everything else uses the in-process host (`WebApplicationFactory`) with `JasperFxEnvironment.AutoStartHost = true`,
+  which `RunJasperFxCommands` needs to start under a test host.
+- WireMock.Net is on a separate path from `Aspire.Hosting.Testing`: their Humanizer versions conflict (NU1608), so
+  `OrderPlatform.AppHost.Tests` does not reference `OrderPlatform.Testing`.
+
 ### Not in scope for v1
 
 - **No coverage percentage gate.** The "must cover" column above is the requirement, reviewed in pull requests.

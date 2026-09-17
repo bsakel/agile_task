@@ -143,6 +143,15 @@ Code removal and contract remain separate deployments. Until then, this pattern 
   - multi-statement scripts without explicit `BEGIN/COMMIT`, and `CREATE INDEX CONCURRENTLY` combined with other statements, fail;
   - scripts under `contract/` must reference the expand script they complete, and that script must exist in an earlier release tag.
 - The same rules are applied to the **generated Marten patch** published by CI (ADR-0008).
+- Implementation notes (PR 1c):
+  - Comments, string literals and dollar-quoted function bodies are ignored.
+  - `SET` statements do not count as statements, so `SET lock_timeout` may precede a lone `CREATE INDEX CONCURRENTLY`.
+  - Volatile defaults, missing defaults on `NOT NULL`, validated constraints and non-concurrent indexes are violations
+    only for tables that already exist, i.e. not created in the same script.
+  - A contract script names its expand script in a comment: `-- completes: expand/<file>.sql`. CI passes the latest
+    release tag, and the test checks that the expand script is part of that release.
+  - The generated patch may drop and recreate Marten's own `mt_*` functions.
+  - Every rule has a sample script that must fail (`MigrationRuleTests`).
 - Every expand PR creates linked "code removal" and "contract" backlog items so temporary structures are not forgotten.
 - Later (backlog): a CI job runs the **previous release's integration tests against the new schema** — direct proof that rollback is safe.
 

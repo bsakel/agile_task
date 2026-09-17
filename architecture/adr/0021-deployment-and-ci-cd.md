@@ -16,8 +16,10 @@ become running software, without committing to a specific hosting platform befor
 
 - Two container images: **`orderplatform-api`** and **`orderplatform-migrator`**, built from the same commit.
 - The API image contains **pre-generated Wolverine handler code**: the image build runs `codegen write` and the API
-  starts with `TypeLoadMode.Static`, so no runtime compilation happens in production (ADR-0004). CI fails if generated
-  code is out of date with the handlers (`codegen test`).
+  starts with `TypeLoadMode.Static`, so no runtime compilation happens in production (ADR-0004). Generated code is never
+  committed, so it cannot go out of date; CI proves that it builds and loads by building the image and starting it in the
+  compose smoke test. **Revised in PR 1c:** `codegen test` is not used: in Wolverine 6.38 it compiles the static handler
+  registry apart from the handler files it references and always fails (CS0234), while `codegen write` plus a build works.
 - Images are **built once and promoted** across environments by digest; tagged with the git commit SHA. No
   environment-specific builds, no configuration baked into images.
 - The OpenAPI document and an SBOM are published alongside the images.
@@ -44,6 +46,27 @@ become running software, without committing to a specific hosting platform befor
 5. Deploy the **same image digests** to **Production** (sequence below), run smoke tests
 
 The reference implementation is a GitHub Actions workflow; the stages are tool-agnostic.
+
+#### Implementation (PR 1c)
+
+- `.github/workflows/pull-request.yml` runs three parallel jobs:
+  - **build and test**: build, vulnerable packages, architecture, migration, integration and AppHost tests;
+  - **release compatibility** (`.github/scripts/release-compatibility.sh`);
+  - **compose smoke test** (`.github/scripts/compose-smoke.sh`).
+- **Previous release** = the latest `v*` tag. Until the first release, the merge base with `main` (on `main` itself, the
+  previous commit). Against it, the release compatibility job:
+  1. migrates an empty database with the previous Migrator;
+  2. publishes the Marten patch of the new commit as an artifact and checks it with the migration rules;
+  3. migrates forward with the new Migrator;
+  4. **starts the previous Api on the new schema** (a first automated rollback check);
+  5. compares both OpenAPI documents with `oasdiff` (fails on breaking changes; skipped while the previous release has
+     no document).
+- `.github/workflows/main.yml` reuses the pull request pipeline, then builds both images tagged with the commit SHA,
+  produces SBOMs (Syft) and scans the images (Trivy, fails on fixable HIGH/CRITICAL).
+- Stubbed until a hosting platform is chosen: registry push, the rollback floor check and the deployment sequence
+  (placeholders in the `staging` and `production` jobs). Manual approval is the `production` environment's required
+  reviewers.
+- Tool images are pinned by digest (oasdiff, Trivy, Syft).
 
 ### Deployment sequence (every environment)
 

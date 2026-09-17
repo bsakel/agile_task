@@ -161,10 +161,12 @@ tests/                                                 levels and tooling per AD
   OrderPlatform.Api.IntegrationTests                  Testcontainers Postgres, end-to-end slices
   OrderPlatform.Architecture.Tests                    module boundary rules (ArchUnitNET)
   OrderPlatform.Migrations.Tests                      expand/contract rule enforcement
+  OrderPlatform.AppHost.Tests                         Aspire AppHost starts the system, Migrator first
+  OrderPlatform.Testing                               shared test infrastructure (containers, processes, tokens, WireMock, flags)
 deploy/
   docker-compose.yml, .env.example
   keycloak/orderplatform-realm.json                   local identity realm (dev-only credentials)
-.github/workflows/                                     CI/CD reference pipeline (ADR-0021)
+.github/workflows/, .github/scripts/                   CI/CD reference pipeline, release compatibility and compose smoke test (ADR-0021)
 architecture/
   this folder
 ```

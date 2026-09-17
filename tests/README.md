@@ -9,6 +9,7 @@ Microsoft.Testing.Platform (`global.json`), assertions use Shouldly.
 | `OrderPlatform.Migrations.Tests` | Expand/contract and online-safety rules for every DbUp script and for the generated Marten patch — ADR-0009 | Nothing |
 | `OrderPlatform.Api.IntegrationTests` | Acceptance criteria of PRs 1a and 1b: Migrator, startup guards, authentication, idempotency, problem details, feature flags, OTLP traces | Docker |
 | `OrderPlatform.AppHost.Tests` | The Aspire AppHost runs the Migrator to completion before the Api is ready | Docker, free port 8080 |
+| `Ordering.Domain.Tests` | Order state machine: every transition and every disallowed command — ADR-0017 | Nothing |
 | `OrderPlatform.Testing` | Shared infrastructure (not a test project) | — |
 
 ```bash

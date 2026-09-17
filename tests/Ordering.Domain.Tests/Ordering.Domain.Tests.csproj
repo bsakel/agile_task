@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Order state machine: every transition and every disallowed command (ADR-0017, ADR-0022 domain unit level). -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Modules\Ordering\Ordering.Domain\Ordering.Domain.csproj" />
+  </ItemGroup>
+</Project>

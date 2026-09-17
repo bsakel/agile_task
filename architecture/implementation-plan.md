@@ -201,8 +201,8 @@ Dependency order (PRs on the same line can be open at the same time):
 
 ```
 2a, 2b, 2d, 2h, 3a, 3b      no dependencies
-2c (2a, 2b)   2e (2d)   3c (3a)
-2f (2c, 2d)
+2c (2a, 2b)   2d-2 (2d)   3c (3a)
+2e (2d-2)   2f (2c, 2d-2)
 2g (2f)   2i (2f, 2h)
 2j (2g, 2i)
 4a (all above)
@@ -210,16 +210,17 @@ Dependency order (PRs on the same line can be open at the same time):
 
 ### Phase 2 — Reference vertical slice: Ordering
 
-Ten PRs. The slice ends when an order is reserved and waits in `Invoicing` (invoicing is a next step), or is cancelled.
+Eleven PRs. The slice ends when an order is reserved and waits in `Invoicing` (invoicing is a next step), or is cancelled.
 
 | PR | Branch | Scope | Acceptance criteria (automated tests) | Size | Depends on |
 |---|---|---|---|---|---|
 | 2a | `phase-2a/pricing-pipeline` | Pricing domain only (ADR-0018): `IPricingRule`, fixed stages, `PriceBreakdown`, `LineSubtotalRule`, `ShippingChargeRule` gated by the release flag `Pricing.ShippingCharge` (registered in the Pricing flag registry), `TaxRule` incl. reverse charge, rounding policy. New `Pricing.Domain.Tests` | Stages run in fixed order and the registered rule order is asserted; per-line rounding and per-rate tax rounding cases; reverse charge yields zero tax; shipping charge present with the flag on and absent with it off | M | — |
 | 2b | `phase-2b/customers-reference-data` | Customers module: `customers` schema expand script, seeded accounts matching the Keycloak realm (status, tax profile, billing and shipping address, contact), `ICustomerDirectory` in `Customers.Contracts`, Dapper implementation | After the Migrator runs, a seeded account is read with tax profile and address/contact ids; unknown account returns a failure; migration safety tests pass on the new scripts | M | — |
 | 2c | `phase-2c/price-lists` | `pricing` schema with seeded base and customer-specific price lists, Dapper price list reader, `IPricingService` in `Pricing.Contracts` combining price lists, the customer tax profile (via `Customers.Contracts`) and the pipeline | Customer-specific price overrides the base price; a SKU without a price fails with `unknown-product`; the breakdown records the price list version and the shipping charge flag decision; integration tests with the flag on and off | M | 2a, 2b |
-| 2d | `phase-2d/order-aggregate-pre-fulfilment` | `Order` aggregate part 1 (ADR-0017): all states and lifecycle events with explicit aliases; transitions out of `ValidatingInventory`, `AwaitingCustomer`, `Invoicing`, `AwaitingPayment`; customer cancellation rule for **every** state; ignore-and-log for events that do not apply; cancel while a reservation is in flight. New `Ordering.Domain.Tests` | Table-driven tests: every transition out of these four states, every disallowed command in every state for customer cancellation, ignored events leave state unchanged; `InventoryReserved` after cancellation asks for a release | M | — |
-| 2e | `phase-2e/order-aggregate-fulfilment` | `Order` aggregate part 2: transitions out of `Processing`, `FulfilmentOnHold`, `Refunding`, `Shipped`, `Cancelled` (late payment) and `RequiresAttention`; support cancellation with mandatory reason; the remaining races of ADR-0017 §6 | Table-driven tests for every remaining transition and disallowed command; support cancel allowed up to and including `Processing`; payment after cancellation → `RequiresAttention`; `FulfilmentFailed` after dispatch ignored | M | 2d |
-| 2f | `phase-2f/submit-order` | `POST /v1/orders` (`Idempotency-Key`) → `SubmitOrder` handler: active account via `Customers.Contracts`, price via `Pricing.Contracts`, start the stream with `OrderSubmitted` (process version, breakdown, address/contact ids). Order stays in `ValidatingInventory` until 2i | `201 Created` with status and price breakdown; unknown SKU → `422 unknown-product`; inactive account → `422`; repeating the request with the same key returns the original response and no second stream; `OrderSubmitted` contains no personal data (serialised event checked against the seeded names, emails and addresses) | M | 2c, 2d |
+| 2d | `phase-2d/order-aggregate-pre-fulfilment` | `Order` aggregate part 1a (ADR-0017): all states, the submission and inventory events with explicit aliases, the decision and follow-up types; submission; transitions out of `ValidatingInventory`; ignore-and-log for events that do not apply; a reservation completing after a cancellation. New `Ordering.Domain.Tests` | Table-driven tests over every reachable state × trigger: allowed transitions happen, everything else is ignored and leaves the state unchanged; `InventoryReserved` after cancellation asks for a release | M | — |
+| 2d-2 | `phase-2d-2/order-invoicing-and-cancellation` | `Order` aggregate part 1b: invoicing and payment events with aliases; transitions out of `Invoicing` and `AwaitingPayment` (incl. overdue unpaid and partially paid); customer cancellation rule for **every** state and the compensation each state needs | Table-driven tests extended with the new triggers; every disallowed command in every state for customer cancellation returns `order-not-cancellable`; unpaid at the due date cancels with void + release, partially paid goes to `RequiresAttention` | M | 2d |
+| 2e | `phase-2e/order-aggregate-fulfilment` | `Order` aggregate part 2 (incl. customer cancellation from `FulfilmentOnHold`, deferred from 2d-2): transitions out of `Processing`, `FulfilmentOnHold`, `Refunding`, `Shipped`, `Cancelled` (late payment) and `RequiresAttention`; support cancellation with mandatory reason; the remaining races of ADR-0017 §6 | Table-driven tests for every remaining transition and disallowed command; support cancel allowed up to and including `Processing`; payment after cancellation → `RequiresAttention`; `FulfilmentFailed` after dispatch ignored | M | 2d-2 |
+| 2f | `phase-2f/submit-order` | `POST /v1/orders` (`Idempotency-Key`) → `SubmitOrder` handler: active account via `Customers.Contracts`, price via `Pricing.Contracts`, start the stream with `OrderSubmitted` (process version, breakdown, address/contact ids). Order stays in `ValidatingInventory` until 2i | `201 Created` with status and price breakdown; unknown SKU → `422 unknown-product`; inactive account → `422`; repeating the request with the same key returns the original response and no second stream; `OrderSubmitted` contains no personal data (serialised event checked against the seeded names, emails and addresses) | M | 2c, 2d-2 |
 | 2g | `phase-2g/read-order` | `OrderDetails` inline projection (registered explicitly), `GET /v1/orders/{id}`, `GET /v1/orders/{id}/history` (raw stream) | Submitted order is returned with state, items and breakdown; history lists `OrderSubmitted`; another account's order returns `404` on both endpoints | S | 2f |
 | 2h | `phase-2h/inventory-port` | `IInventoryGateway` in `Inventory.Application` (all-or-nothing reserve and release with idempotency keys, outcome query); fake adapter in `Inventory.Infrastructure` (in-memory stock, configurable unavailable SKUs and failures) selected by `Integrations:Inventory:Mode`. No messages | Unit tests: reserve succeeds only when every line is available; repeated key does not reserve twice; release restores stock; configured failure is returned as a `Result` failure | S | — |
 | 2i | `phase-2i/inventory-reservation` | `ReserveInventory` command and handler (Inventory), `InventoryReserved` / `InventoryUnavailable` integration events and their Ordering handlers; `SubmitOrder` sends `ReserveInventory` through the outbox in the same transaction | Available stock → order in `Invoicing`; fake configured unavailable → `AwaitingCustomer`; the trace of one submission shows HTTP → handler → Postgres → outbox → inventory handler → order update | M | 2f, 2h |
@@ -290,12 +291,12 @@ rules; `N` ids are stable references for PR names (`next-n3/invoicing`). The uno
 | Architecture docs + ADRs | Full | 1.5 h |
 | Phase 0 | All seven spikes executed (more than planned — S3, S4 and S7 changed the design) | 1 h (actual) |
 | Phase 1 | Full, as three PRs (1a runtime, 1b API/security, 1c tests/CI); CI deployment stages stubbed | 2 h (+ review time) |
-| Phase 2 | Full state machine + submit / reserve / get / cancel slice, 10 PRs | 1.5 h |
+| Phase 2 | Full state machine + submit / reserve / get / cancel slice, 11 PRs | 1.5 h |
 | Phase 3 | Billing and shipping ports with fakes, one billing HTTP adapter, 3 PRs | 0.5 h |
 | Phase 4 | Handover documentation, 1 PR | 0.25 h |
 
 Phase 0 took longer than budgeted, and Phase 1 PRs proved too large to review. Phases 2–4 are therefore limited to one
-working example per functional requirement, delivered as 14 small PRs (about 15 minutes of review each, on top of the
+working example per functional requirement, delivered as 15 small PRs (about 15 minutes of review each, on top of the
 estimates). Beyond the timebox, a delivery team works through the next steps before the first production release.
 
 ## Risks

@@ -2,6 +2,7 @@ using Marten;
 using Microsoft.Extensions.Hosting;
 using OrderPlatform.BuildingBlocks.Infrastructure.Modules;
 using OrderPlatform.Ordering.Application;
+using OrderPlatform.Ordering.Domain;
 using Wolverine;
 
 namespace OrderPlatform.Ordering.Infrastructure;
@@ -20,6 +21,11 @@ public sealed class OrderingModule : IModule
     public void ConfigureMarten(StoreOptions options)
     {
         // Every document type, projection and event alias is registered here explicitly (ADR-0008, ADR-0010).
+        // The alias is the stored contract: renaming the C# class never changes it (ADR-0010 rule 4).
+        options.Events.MapEventType<OrderSubmitted>("order_submitted");
+        options.Events.MapEventType<InventoryReserved>("inventory_reserved");
+        options.Events.MapEventType<InventoryUnavailable>("inventory_unavailable");
+        options.Events.MapEventType<OrderCancelled>("order_cancelled");
     }
 
     public void ConfigureWolverine(WolverineOptions options) =>

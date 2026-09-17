@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Adapter-level unit tests for the Inventory fake (ADR-0014, ADR-0022). Runs without Docker. -->
+  <PropertyGroup>
+    <AssemblyName>OrderPlatform.Inventory.Infrastructure.Tests</AssemblyName>
+    <RootNamespace>OrderPlatform.Inventory.Infrastructure.Tests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Modules\Inventory\Inventory.Infrastructure\Inventory.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

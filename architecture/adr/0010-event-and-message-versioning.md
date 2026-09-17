@@ -49,7 +49,7 @@ the type breaks on that stream.
 8. Integration events in `*.Contracts` are the published language between modules and follow the same rules. The same
    register-before-emit sequence applies to **Wolverine message types**: an older build must have a handler for every
    message type that may already be in a durable queue. (How Wolverine treats an unknown message type in a durable queue
-   was not part of S3 and is verified in the Phase 3 durability tests.)
+   was not part of S3 and is verified in the durability tests, plan next step N14.)
 
 ## Consequences
 

@@ -82,10 +82,10 @@ integrated clients. Clients also retry over unreliable networks, so creating req
   left behind by a crashed process can be taken over after its lease expires (optimistic concurrency on the record).
 - The daily cleanup is a Wolverine **recurring (cron) message** (`CleanUpIdempotencyRecords`, `0 3 * * *` UTC): durable,
   one publisher per cluster, and changes to the schedule are applied by the nodes on startup.
-- **Atomicity gap until Phase 2:** in PR 1b the claim and the stored response are written in their own transactions,
+- **Atomicity gap:** in PR 1b the claim and the stored response are written in their own transactions,
   around the endpoint. If the process crashes after a business handler committed but before the response was stored, a
-  retry after the lease would execute the command again. Phase 2 closes the gap for state-changing Ordering endpoints:
-  the handler completes the record **in the same Marten session** as the order events (see the implementation plan).
+  retry after the lease would execute the command again. The Phase 2 Ordering endpoints still use the filter as is; next
+  step N1 of the plan closes the gap: the handler completes the record **in the same Marten session** as the order events.
 
 ### Documentation
 

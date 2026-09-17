@@ -1,0 +1,6 @@
+<Project>
+  <!-- Phase 0 spikes pin their own package versions. -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>

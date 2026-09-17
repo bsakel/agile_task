@@ -131,18 +131,21 @@ referenced by other modules** — enforced by architecture tests ([ADR-0015](adr
 ## 7. Target solution structure
 
 ```
-OrderPlatform.sln
+OrderPlatform.slnx
+global.json                                            pinned .NET SDK
 Directory.Build.props / Directory.Packages.props      central build settings and package versions
 src/
   AppHost/
     OrderPlatform.AppHost                              Aspire orchestration (dev inner loop)
     OrderPlatform.ServiceDefaults                      OpenTelemetry, health checks, HTTP resilience
   Host/
-    OrderPlatform.Api                                  composition root, endpoints, auth, Wolverine config
+    OrderPlatform.Composition                          module list + Marten/Wolverine configuration, shared by Api and Migrator
+    OrderPlatform.Api                                  HTTP host: endpoints, auth, API conventions
   Tools/
-    OrderPlatform.Migrator                             DbUp scripts runner + Marten schema apply
+    OrderPlatform.Migrator                             DbUp scripts, Marten schema, Wolverine storage, verification (ADR-0008)
   BuildingBlocks/
-    OrderPlatform.BuildingBlocks                       Result, errors, clock, idempotency, feature flags, module abstractions
+    OrderPlatform.BuildingBlocks                       technology-free primitives: Result, Error, IFeatureFlags (usable by Domain/Contracts/Application)
+    OrderPlatform.BuildingBlocks.Infrastructure        IModule, RelationalOutbox (Marten/Wolverine/ASP.NET Core dependent)
   Modules/
     Ordering/   Ordering.Domain | Ordering.Application | Ordering.Infrastructure | Ordering.Contracts
     Customers/  ...

@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Technology-free primitives shared by Domain, Contracts and Application projects. No package references. -->
+</Project>

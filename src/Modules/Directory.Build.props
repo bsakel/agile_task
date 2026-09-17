@@ -1,0 +1,12 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+  <PropertyGroup>
+    <!-- Module projects are named <Module>.<Layer>; assemblies and namespaces get the platform prefix. -->
+    <AssemblyName>OrderPlatform.$(MSBuildProjectName)</AssemblyName>
+    <RootNamespace>OrderPlatform.$(MSBuildProjectName)</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup Condition="$(MSBuildProjectName.EndsWith('.Infrastructure'))">
+    <!-- DbUp scripts (ADR-0007, ADR-0009): Migrations/expand/*.sql and Migrations/contract/*.sql -->
+    <EmbeddedResource Include="Migrations\**\*.sql" LogicalName="migrations/%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

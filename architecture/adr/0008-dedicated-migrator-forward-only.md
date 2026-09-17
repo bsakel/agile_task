@@ -33,6 +33,9 @@ Spike S4 showed that the three behave differently:
 3. **Wolverine message storage**: applied programmatically through Wolverine's resource setup (equivalent of `resources setup`).
 4. **Verification**: an assert step (equivalent of `db-assert`) confirms the database matches the configuration; any
    difference fails the Migrator.
+5. **Run record**: the Migrator writes a row to `platform.migrator_runs` (its own DbUp-managed schema). The Api checks for
+   it at startup and fails with an actionable message if it is missing; the `/health/ready` check uses the same record.
+   Without it, a missing schema only surfaced as a missing-table error inside Wolverine's startup.
 
 ### Review of generated schema changes
 

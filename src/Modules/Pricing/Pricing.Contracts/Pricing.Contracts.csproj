@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Public surface of the Pricing module: query interfaces, DTOs, integration events. The only project other modules may reference. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\OrderPlatform.BuildingBlocks\OrderPlatform.BuildingBlocks.csproj" />
+  </ItemGroup>
+</Project>

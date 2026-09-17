@@ -1,0 +1,15 @@
+**/bin/
+**/obj/
+**/Internal/Generated/
+.git/
+.github/
+.vs/
+.vscode/
+.idea/
+architecture/
+spikes/
+tests/
+deploy/
+**/*.user
+**/*.log
+.env

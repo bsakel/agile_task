@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Infrastructure abstractions shared by module Infrastructure projects and the composition root. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="WolverineFx.Marten" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\OrderPlatform.BuildingBlocks\OrderPlatform.BuildingBlocks.csproj" />
+  </ItemGroup>
+</Project>

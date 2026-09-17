@@ -55,3 +55,6 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Wolverine pre-generated handler code is produced during the container build (ADR-0021), never committed.
+src/**/Internal/Generated/

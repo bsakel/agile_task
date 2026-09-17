@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Adapter level of ADR-0022: the fake billing provider here, the WireMock.Net HTTP adapter tests in PR 3c. No Docker. -->
+  <PropertyGroup>
+    <RootNamespace>OrderPlatform.Billing.Infrastructure.Tests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Modules\Billing\Billing.Infrastructure\Billing.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

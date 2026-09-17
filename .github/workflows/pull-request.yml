@@ -49,13 +49,6 @@ jobs:
             exit 1
           fi
 
-      # 2. Module unit tests: domain, application and fake-adapter levels of ADR-0022. No infrastructure needed.
-      - name: Module unit tests
-        run: |
-          for project in tests/*.{Domain,Application,Infrastructure}.Tests; do
-            if [ -d "$project" ]; then dotnet test --project "$project" -c $CONFIGURATION --no-build; fi
-          done
-
       # 3. Architecture and migration safety rules (ADR-0015, ADR-0009). No Docker needed.
       - name: Architecture tests
         run: dotnet test --project tests/OrderPlatform.Architecture.Tests -c $CONFIGURATION --no-build

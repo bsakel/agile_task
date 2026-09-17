@@ -52,4 +52,11 @@
   <Folder Name="/src/Tools/">
     <Project Path="src/Tools/OrderPlatform.Migrator/OrderPlatform.Migrator.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/OrderPlatform.Api.IntegrationTests/OrderPlatform.Api.IntegrationTests.csproj" />
+    <Project Path="tests/OrderPlatform.AppHost.Tests/OrderPlatform.AppHost.Tests.csproj" />
+    <Project Path="tests/OrderPlatform.Architecture.Tests/OrderPlatform.Architecture.Tests.csproj" />
+    <Project Path="tests/OrderPlatform.Migrations.Tests/OrderPlatform.Migrations.Tests.csproj" />
+    <Project Path="tests/OrderPlatform.Testing/OrderPlatform.Testing.csproj" />
+  </Folder>
 </Solution>

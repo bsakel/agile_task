@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Integration tests against Testcontainers PostgreSQL and Keycloak; schema built by the real Migrator (ADR-0022). Needs Docker. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\OrderPlatform.Testing\OrderPlatform.Testing.csproj" />
+    <ProjectReference Include="..\..\src\Host\OrderPlatform.Api\OrderPlatform.Api.csproj" />
+    <!-- Built first and run as a process, like the deployment job (not referenced as an assembly). -->
+    <ProjectReference Include="..\..\src\Tools\OrderPlatform.Migrator\OrderPlatform.Migrator.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyMetadata Include="MigratorAssembly" Value="$(MSBuildThisFileDirectory)..\..\src\Tools\OrderPlatform.Migrator\bin\$(Configuration)\$(TargetFramework)\OrderPlatform.Migrator.dll" />
+    <AssemblyMetadata Include="ApiAssembly" Value="$(MSBuildThisFileDirectory)..\..\src\Host\OrderPlatform.Api\bin\$(Configuration)\$(TargetFramework)\OrderPlatform.Api.dll" />
+  </ItemGroup>
+</Project>

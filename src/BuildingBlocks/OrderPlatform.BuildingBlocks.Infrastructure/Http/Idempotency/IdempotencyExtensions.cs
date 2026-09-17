@@ -21,7 +21,8 @@ public static class IdempotencyExtensions
     public static void ConfigureIdempotency(this StoreOptions options) =>
         options.Schema.For<IdempotencyRecord>()
             .UseOptimisticConcurrency(true)
-            .Index(record => record.CreatedAt);
+            // Concurrent index creation, so adding it to a populated table does not block writes (ADR-0009 rule 1).
+            .Index(record => record.CreatedAt, index => index.IsConcurrent = true);
 
     /// <summary>Discovers the cleanup handler and schedules the cleanup message.</summary>
     public static void ConfigureIdempotency(this WolverineOptions options, IConfiguration configuration)

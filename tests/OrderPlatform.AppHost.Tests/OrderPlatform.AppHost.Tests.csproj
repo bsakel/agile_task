@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Starts the Aspire AppHost with its containers (ADR-0013). Needs Docker and a free port 8080 (Keycloak). -->
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Testing" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\AppHost\OrderPlatform.AppHost\OrderPlatform.AppHost.csproj" />
+  </ItemGroup>
+</Project>

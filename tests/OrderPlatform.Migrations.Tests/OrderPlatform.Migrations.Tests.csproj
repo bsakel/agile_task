@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Expand/contract and online-safety rules for DbUp scripts and the generated Marten patch (ADR-0009). No Docker needed. -->
+</Project>

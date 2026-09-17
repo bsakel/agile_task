@@ -1,11 +1,12 @@
 using Marten;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using OrderPlatform.BuildingBlocks.Messaging;
 
 namespace OrderPlatform.BuildingBlocks.Infrastructure.Http.Idempotency;
 
 /// <summary>Removes idempotency records older than the retention period. Sent daily by a Wolverine recurring schedule.</summary>
-public sealed record CleanUpIdempotencyRecords;
+public sealed record CleanUpIdempotencyRecords : ICommand;
 
 public static class CleanUpIdempotencyRecordsHandler
 {

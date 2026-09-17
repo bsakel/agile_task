@@ -33,10 +33,12 @@ migrator_exit=$(docker inspect "$("${compose[@]}" ps -a -q migrator)" --format '
 [ "$migrator_exit" = "0" ] || fail "Migrator exited with $migrator_exit"
 echo "✔ Migrator completed (exit 0) before the Api started"
 
-# The console logger writes asynchronously: readiness can be reported before the startup lines reach docker logs.
+# Read the logs before matching: with pipefail, grep -q closing the pipe early would fail the pipeline on large logs.
+# The console logger writes asynchronously, so readiness can also be reported before the startup lines are visible.
 static_mode=false
 for _ in $(seq 1 30); do
-  if "${compose[@]}" logs --no-color api | grep -q "Using pre-generated Wolverine HandlerRegistry"; then
+  api_logs=$("${compose[@]}" logs --no-color api)
+  if grep -q "Using pre-generated Wolverine HandlerRegistry" <<< "$api_logs"; then
     static_mode=true
     break
   fi
@@ -58,8 +60,8 @@ first=$(curl -sf -X POST "$api/v1/_diagnostics/echo" -H "Authorization: Bearer $
   -H "Idempotency-Key: $key" -d '{"message":"smoke"}') || fail "Authorized request failed"
 replay_headers=$(curl -s -D - -o /dev/null -X POST "$api/v1/_diagnostics/echo" -H "Authorization: Bearer $token" \
   -H 'Content-Type: application/json' -H "Idempotency-Key: $key" -d '{"message":"smoke"}')
-echo "$first" | grep -q '"accountId":"0b5c0d8e-7a1f-4c3e-9d2a-6f4b8e1a2c01"' || fail "Unexpected response: $first"
-echo "$replay_headers" | grep -qi '^Idempotent-Replayed: true' || fail "Repeated request was not replayed"
+grep -q '"accountId":"0b5c0d8e-7a1f-4c3e-9d2a-6f4b8e1a2c01"' <<< "$first" || fail "Unexpected response: $first"
+grep -qi '^Idempotent-Replayed: true' <<< "$replay_headers" || fail "Repeated request was not replayed"
 echo "✔ Authorized request succeeded and its repeat was replayed from the idempotency store"
 
 curl -sf "$api/openapi/v1.json" > /dev/null || fail "OpenAPI document not served"

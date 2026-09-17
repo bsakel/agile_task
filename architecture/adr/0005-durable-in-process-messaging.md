@@ -26,7 +26,7 @@ We will run messaging **in-process on durable local queues persisted in PostgreS
 - **Dapper-based modules** use the same PostgreSQL outbox by enlisting their Npgsql transaction. Because this relies on
   low-level Wolverine types, modules use a `RelationalOutbox` helper from `BuildingBlocks` instead (ADR-0007).
 - Production runs with `DurabilityMode.Balanced` (several API instances). Spike S1 ran in `Solo` mode; recovery with two
-  instances is verified by the Phase 3 durability test.
+  instances is verified by the durability tests (plan next step N14).
 
 ## Required companion rules
 

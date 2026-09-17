@@ -38,7 +38,7 @@ promise needs a test at the cheapest level that can actually prove it.
 
 - **Feature flags:** any test of flagged behaviour runs with the flag on and off (ADR-0019).
 - **Durability** (crash and restart completes pending messages and timers) is proven once by the durability tests, not
-  per feature. Phase 0 proved it in `Solo` mode; the test suite proves it in the production `Balanced` mode.
+  per feature. Phase 0 proved it in `Solo` mode; the durability tests (plan next step N14) prove it in the production `Balanced` mode.
 - Tests use `WolverineFx.RuntimeCompilation` (dynamic code generation); the container smoke test covers the
   pre-generated static mode (ADR-0021).
 - Integration tests share one PostgreSQL container per test run and isolate data by unique account ids, not by

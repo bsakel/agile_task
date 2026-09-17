@@ -1,7 +1,8 @@
 # Implementation Plan
 
 Status: **Agreed** — all ADRs accepted. **Phase 0 completed** ([results](phase-0-results.md)); plan and ADRs updated
-with its findings. Phase 1: PRs 1a and 1b merged; PR 1c in review. Next: Phase 2.
+with its findings. **Phase 1 completed** (PRs 1a, 1b, 1c merged). Phases 2–4 re-planned as small PRs limited to the
+assessment scope; the remaining work is split into [next steps](#next-steps-for-the-delivery-team). Next: Phase 2.
 
 ## Guiding principles
 
@@ -17,13 +18,18 @@ are delivered through GitHub pull requests.**
 
 | Rule | Detail |
 |---|---|
-| One PR per reviewable unit | A phase is split into several PRs when one PR would be too large to review; the split is recorded in this plan **before** the work starts (Phase 1: PRs 1a, 1b, 1c) |
-| Branching | Each PR branches from the latest `main` after the previous PR is merged. Names: `phase-<n><letter>/<topic>` for implementation, `docs/<topic>` for plan or ADR-only changes |
+| One concern per PR | Each PR delivers exactly one row of a phase table below. No opportunistic refactoring, documentation sweeps or backlog items; plan or ADR edits only where they concern that PR (see Deviations). The split is recorded in this plan **before** the work starts |
+| Size budget | A PR is reviewable in about **15 minutes**: at most ~400 changed lines of hand-written code **including tests** and ~15 files. Seed data, approved-names files and generated files do not count. If implementation exceeds the budget, the author stops and proposes a further split (docs PR or plan update in the PR) instead of finishing a large PR. Sizes in the tables: **S** ≈ up to 200 lines, **M** ≈ 200–400 |
+| Tests in the same PR | Every acceptance criterion of a PR is proven by an automated test added in that PR; the pull request pipeline passes, so `main` stays green after every merge. Manual evidence alone is not accepted (PRs 1a and 1b were the exception before CI existed) |
+| Domain before wiring | Code without infrastructure (domain logic, ports, fake adapters) lands in its own PR with unit tests before the PR that wires it into messaging or endpoints |
+| Message with its handler | A command or integration event type lands in the same PR as its handler, because the architecture tests fail on unhandled message types (ADR-0015). Event types are registered with their aliases in the PR that introduces them (ADR-0010) |
+| Dependency order | Each PR lists its dependencies and branches from the latest `main` after they are merged. PRs without a dependency on each other may be open at the same time |
+| Branching | Names: `phase-<n><letter>/<topic>` for implementation (e.g. `phase-2a/pricing-pipeline`), `docs/<topic>` for plan or ADR-only changes |
 | Manual review | Every PR is reviewed manually by the repository owner, who also merges it. The author (including AI assistance) never merges its own PR |
-| Verification evidence | Until CI exists (PRs 1a and 1b), the PR description lists each acceptance criterion with the command run and its result. From PR 1c, the pull request pipeline must pass as well |
-| PR description | Summary; ADRs implemented; acceptance criteria with evidence; deviations from the plan or ADRs; notes on AI usage (template in `.github/pull_request_template.md`) |
+| PR description | Summary; ADRs implemented; **how to review** (files in suggested reading order); acceptance criteria with the tests that prove them; deviations from the plan or ADRs; notes on AI usage (template in `.github/pull_request_template.md`) |
+| Phase criteria | Each phase-level acceptance criterion names the PR that proves it |
 | Deviations | If implementation shows the plan or an ADR is wrong, the PR updates the plan/ADR (or adds a superseding ADR) in the same PR and calls it out in the description |
-| Scope | A PR contains only what its plan section lists. Discovered follow-up work goes to the backlog section, not into the PR |
+| Scope | A PR contains only what its plan row lists. Discovered follow-up work goes to the backlog section, not into the PR |
 
 ## Phases
 
@@ -123,14 +129,14 @@ Deliverables:
 - Integration mode configuration and the **startup guard** that rejects `Fake` adapters outside Development/Test (ADR-0014).
 - A **development-only diagnostics endpoint** (`POST /v1/_diagnostics/echo`) that exercises authentication, account
   scoping, idempotency, problem details and a feature flag, so the conventions can be verified before any business
-  endpoint exists. It is not mapped outside Development and is removed once Phase 2 endpoints cover the same behaviour.
+  endpoint exists. It is not mapped outside Development and is removed once Ordering endpoints cover the same behaviour (next step N2).
 
 Implementation notes (added in PR 1b):
 - Keycloak realm: the portal client's order scopes became optional client scopes, so a user token with only
   `orders:read` demonstrates the `403` (ADR-0016).
 - `IModule.MapEndpoints` receives the `/v1` route group; `IModule.FeatureFlags` exposes the module's flag registry.
-- The idempotency claim and the stored response use their own transactions in PR 1b; the Phase 2 Ordering handlers
-  write the completion atomically with the order events (ADR-0020, deliverable added to Phase 2).
+- The idempotency claim and the stored response use their own transactions in PR 1b; the Ordering handlers
+  write the completion atomically with the order events (ADR-0020, next step N1).
 - docker-compose runs the Api as `Development` (fake integrations and the diagnostics endpoint are allowed locally).
 
 Acceptance criteria (verified manually, evidence in the PR):
@@ -183,77 +189,99 @@ Acceptance criteria:
 - Every acceptance criterion of PRs 1a and 1b is covered by an automated test.
 - The pull request pipeline runs green on the PR itself, including the compose smoke test.
 
+### Scope of Phases 2–4
+
+After Phase 1, the remaining plan was re-cut into small PRs (see [Delivery workflow](#delivery-workflow)) and limited to
+what the assessment needs: **one working example per functional requirement** of the brief (create, retrieve, cancel,
+lifecycle tracking, inventory validation, pricing, integration with inventory, payment and shipping), plus the complete
+Order state machine and one real-shaped HTTP adapter. Everything else stays specified in the ADRs and is split into
+ordered PRs under [Next steps for the delivery team](#next-steps-for-the-delivery-team).
+
+Dependency order (PRs on the same line can be open at the same time):
+
+```
+2a, 2b, 2d, 2h, 3a, 3b      no dependencies
+2c (2a, 2b)   2e (2d)   3c (3a)
+2f (2c, 2d)
+2g (2f)   2i (2f, 2h)
+2j (2g, 2i)
+4a (all above)
+```
+
 ### Phase 2 — Reference vertical slice: Ordering
 
-Deliverables:
-- `Order` aggregate (event sourced) with the **complete state machine** from ADR-0017: all states, all transitions,
-  cancellation rules per state, ignore-and-log for events that do not apply. Only the handlers below are wired in this phase.
-- Customers: `customers` schema with seeded accounts (matching the Keycloak realm), addresses and tax profiles;
-  `ICustomerDirectory` in `Customers.Contracts` served from the local copy.
-- `POST /v1/orders` (with `Idempotency-Key` header) → `SubmitOrder` command → customer account via
-  `Customers.Contracts` → pricing via `Pricing.Contracts` → start stream with `OrderSubmitted` (status
-  `ValidatingInventory`, address/contact ids only) → `ReserveInventory` sent through the outbox.
-- Inventory: `ReserveInventory` handler behind `IInventoryGateway` with a fake adapter (in-memory stock, configurable
-  failures) → `InventoryReserved` | `InventoryUnavailable` → order moves to `Invoicing` | `AwaitingCustomer`.
-- `GET /orders/{id}` → read model projection (Marten inline projection `OrderDetails`); `GET /orders/{id}/history` → stream events.
-- `POST /orders/{id}/cancel` → `CancelOrder` → aggregate enforces the per-state rule → compensation (release
-  reservation) → `OrderCancelled`.
-- Pricing: seeded base and customer-specific price lists; staged rule pipeline with `LineSubtotalRule`,
-  `ShippingChargeRule`, `TaxRule` (incl. reverse charge) and the rounding policy of ADR-0018 (data from `pricing` schema via Dapper).
-  `ShippingChargeRule` is gated by the example release flag `Pricing.ShippingCharge`; the flag decision is recorded in the
-  price breakdown on `OrderSubmitted` (reference example for ADR-0019).
-- Remove the development-only diagnostics endpoint from PR 1b; its integration tests move to the real Ordering endpoints.
-- Close the idempotency atomicity gap (ADR-0020): state-changing Ordering handlers store the completed idempotency
-  record in the same Marten session as the order events, and the endpoint filter does not overwrite it.
-- Tests: aggregate unit tests covering **every transition and every disallowed command**, pricing rule tests (with the
-  shipping charge flag on and off), one integration test per endpoint using Testcontainers.
+Ten PRs. The slice ends when an order is reserved and waits in `Invoicing` (invoicing is a next step), or is cancelled.
 
-Acceptance criteria:
+| PR | Branch | Scope | Acceptance criteria (automated tests) | Size | Depends on |
+|---|---|---|---|---|---|
+| 2a | `phase-2a/pricing-pipeline` | Pricing domain only (ADR-0018): `IPricingRule`, fixed stages, `PriceBreakdown`, `LineSubtotalRule`, `ShippingChargeRule` gated by the release flag `Pricing.ShippingCharge` (registered in the Pricing flag registry), `TaxRule` incl. reverse charge, rounding policy. New `Pricing.Domain.Tests` | Stages run in fixed order and the registered rule order is asserted; per-line rounding and per-rate tax rounding cases; reverse charge yields zero tax; shipping charge present with the flag on and absent with it off | M | — |
+| 2b | `phase-2b/customers-reference-data` | Customers module: `customers` schema expand script, seeded accounts matching the Keycloak realm (status, tax profile, billing and shipping address, contact), `ICustomerDirectory` in `Customers.Contracts`, Dapper implementation | After the Migrator runs, a seeded account is read with tax profile and address/contact ids; unknown account returns a failure; migration safety tests pass on the new scripts | M | — |
+| 2c | `phase-2c/price-lists` | `pricing` schema with seeded base and customer-specific price lists, Dapper price list reader, `IPricingService` in `Pricing.Contracts` combining price lists, the customer tax profile (via `Customers.Contracts`) and the pipeline | Customer-specific price overrides the base price; a SKU without a price fails with `unknown-product`; the breakdown records the price list version and the shipping charge flag decision; integration tests with the flag on and off | M | 2a, 2b |
+| 2d | `phase-2d/order-aggregate-pre-fulfilment` | `Order` aggregate part 1 (ADR-0017): all states and lifecycle events with explicit aliases; transitions out of `ValidatingInventory`, `AwaitingCustomer`, `Invoicing`, `AwaitingPayment`; customer cancellation rule for **every** state; ignore-and-log for events that do not apply; cancel while a reservation is in flight. New `Ordering.Domain.Tests` | Table-driven tests: every transition out of these four states, every disallowed command in every state for customer cancellation, ignored events leave state unchanged; `InventoryReserved` after cancellation asks for a release | M | — |
+| 2e | `phase-2e/order-aggregate-fulfilment` | `Order` aggregate part 2: transitions out of `Processing`, `FulfilmentOnHold`, `Refunding`, `Shipped`, `Cancelled` (late payment) and `RequiresAttention`; support cancellation with mandatory reason; the remaining races of ADR-0017 §6 | Table-driven tests for every remaining transition and disallowed command; support cancel allowed up to and including `Processing`; payment after cancellation → `RequiresAttention`; `FulfilmentFailed` after dispatch ignored | M | 2d |
+| 2f | `phase-2f/submit-order` | `POST /v1/orders` (`Idempotency-Key`) → `SubmitOrder` handler: active account via `Customers.Contracts`, price via `Pricing.Contracts`, start the stream with `OrderSubmitted` (process version, breakdown, address/contact ids). Order stays in `ValidatingInventory` until 2i | `201 Created` with status and price breakdown; unknown SKU → `422 unknown-product`; inactive account → `422`; repeating the request with the same key returns the original response and no second stream; `OrderSubmitted` contains no personal data (serialised event checked against the seeded names, emails and addresses) | M | 2c, 2d |
+| 2g | `phase-2g/read-order` | `OrderDetails` inline projection (registered explicitly), `GET /v1/orders/{id}`, `GET /v1/orders/{id}/history` (raw stream) | Submitted order is returned with state, items and breakdown; history lists `OrderSubmitted`; another account's order returns `404` on both endpoints | S | 2f |
+| 2h | `phase-2h/inventory-port` | `IInventoryGateway` in `Inventory.Application` (all-or-nothing reserve and release with idempotency keys, outcome query); fake adapter in `Inventory.Infrastructure` (in-memory stock, configurable unavailable SKUs and failures) selected by `Integrations:Inventory:Mode`. No messages | Unit tests: reserve succeeds only when every line is available; repeated key does not reserve twice; release restores stock; configured failure is returned as a `Result` failure | S | — |
+| 2i | `phase-2i/inventory-reservation` | `ReserveInventory` command and handler (Inventory), `InventoryReserved` / `InventoryUnavailable` integration events and their Ordering handlers; `SubmitOrder` sends `ReserveInventory` through the outbox in the same transaction | Available stock → order in `Invoicing`; fake configured unavailable → `AwaitingCustomer`; the trace of one submission shows HTTP → handler → Postgres → outbox → inventory handler → order update | M | 2f, 2h |
+| 2j | `phase-2j/cancel-order` | `POST /v1/orders/{id}/cancel` (`Idempotency-Key`) → `CancelOrder`; `ReleaseInventory` command and handler; release when a reservation completes after cancellation | Reserved order is cancelled and its stock released; `409` with `currentState` and a support hint for an order in `Processing` (stream seeded in the test); `InventoryReserved` arriving after the cancel releases the stock; another account's order returns `404` | M | 2g, 2i |
+
+Phase acceptance criteria:
 - An order can be submitted, reserved (fake), read and cancelled end to end; the trace shows HTTP → handler → Postgres
-  → outbox → inventory handler → order update.
-- With the fake inventory configured as unavailable, the order ends in `AwaitingCustomer`.
-- Submitting an unknown SKU returns `422` with error code `unknown-product`.
-- Reading an order of another account returns `404`.
-- `OrderSubmitted` contains no personal data (asserted in a test).
-- Cancelling an order in `Processing` returns `409 Conflict` with problem details pointing to customer support.
-- Repeating a `POST /orders` with the same idempotency key returns the original result without a second order.
+  → outbox → inventory handler → order update (2i, 2j).
+- With the fake inventory configured as unavailable, the order ends in `AwaitingCustomer` (2i).
+- Submitting an unknown SKU returns `422` with error code `unknown-product` (2f).
+- Reading an order of another account returns `404` (2g).
+- `OrderSubmitted` contains no personal data (2f).
+- Cancelling an order in `Processing` returns `409 Conflict` with problem details pointing to customer support (2j).
+- Repeating a `POST /orders` with the same idempotency key returns the original result without a second order (2f).
+  Crash atomicity of the idempotency record is next step N1.
+- Every state transition and every disallowed command of ADR-0017 is covered by a domain test (2d, 2e).
 
-### Phase 3 — Invoicing, fulfilment and timers (skeleton depth)
+### Phase 3 — Integration ports and a reference adapter
 
-Deliverables:
-- Billing module: `IssueInvoice`, `VoidInvoice`, `CheckInvoiceStatus`, `RefundInvoice` handlers behind `IBillingGateway`
-  with a fake adapter (controllable paid / partially paid / unpaid status).
-- Durable timers: daily `CheckInvoiceStatus`, `InvoiceOverdue` at +3 days, `CustomerResponseTimeout` at +7 days
-  (configurable, shortened in tests via `TimeProvider`).
-- `POST /orders/{id}/payment-status/refresh` sending the same `CheckInvoiceStatus` command as the timer.
-- `POST /orders/{id}/items/reduce` and `PUT /orders/{id}/fulfilment-information`.
-- Shipping module: `RequestShipment`, `CancelShipmentRequest` behind `IShippingGateway` with a fake adapter; events
-  `ShipmentDispatched`, `ShipmentDelivered`, `FulfilmentFailed`.
-- Back-office endpoints `POST /backoffice/orders/{id}/cancel` (support-agent policy, mandatory reason) and
-  `POST /backoffice/orders/{id}/resolve`.
-- One real-shaped HTTP adapter example (typed `HttpClient` + resilience pipeline + ACL mapping + idempotency key +
-  outcome query after timeout), for billing.
-- One local queue per integration (bounded parallelism) with **scheduled** retries and exponential backoff, then dead
-  letter; exhausted compensation moves the order to `RequiresAttention`. No listener circuit breaker (ADR-0014).
-- Durability test category: two API processes in `DurabilityMode.Balanced` (ADR-0022).
+Three PRs. Payment and shipping integration is shown through ports and fakes, and one real-shaped HTTP adapter shows the
+full ADR-0014 pattern. Handlers, timers, retry queues and durability tests are next steps N3–N14.
 
-Acceptance criteria:
-- Unpaid invoice past its due date cancels the order and releases inventory; partially paid goes to `RequiresAttention`.
-- Payment received after cancellation moves the order to `RequiresAttention`.
-- With the fake billing provider down, messages are rescheduled (not dead-lettered) and complete after it recovers,
-  **without a restart**.
-- Killing one of two API processes while a timer, a retry and a compensation are pending: the other process completes
-  them (durability in `Balanced` mode).
-- A durable message whose type the running build does not know is not lost silently (behaviour documented in ADR-0010 rule 8).
+| PR | Branch | Scope | Acceptance criteria (automated tests) | Size | Depends on |
+|---|---|---|---|---|---|
+| 3a | `phase-3a/billing-port` | `IBillingGateway` in `Billing.Application` (issue, void, invoice status, refund; idempotency keys; outcome query); fake adapter with controllable paid / partially paid / unpaid status and provider outage, selected by `Integrations:Billing:Mode`. No messages | Unit tests for each fake status and outage; repeated key does not issue twice; outcome query returns the result of an earlier call | S | — |
+| 3b | `phase-3b/shipping-port` | `IShippingGateway` in `Shipping.Application` (request shipment, cancel request, shipment status; idempotency keys); fake adapter with controllable dispatched / delivered / failed outcomes, selected by `Integrations:Shipping:Mode`. No messages | Unit tests for each fake outcome; repeated key does not request twice; cancel of an unknown request is a failure | S | — |
+| 3c | `phase-3c/billing-http-adapter` | Billing HTTP adapter against a documented example provider contract: typed `HttpClient`, resilience pipeline (timeout per attempt, at most one retry for idempotent calls, circuit breaker), provider DTOs and anti-corruption mapping (unknown status → explicit unknown), idempotency key header, outcome query after timeout; registered for `Mode = Http`. New `Billing.Infrastructure.Tests` | WireMock.Net tests: success; every provider error mapped to a `Result` failure; unknown status mapped to unknown; timeout followed by outcome query that finds the invoice and does not issue a second one; open circuit fails fast | M | 3a |
 
-### Phase 4 — Hardening and handover documentation
+Phase acceptance criteria:
+- Billing and shipping each have a port, a fake selected by integration mode, and unit tests (3a, 3b).
+- The billing HTTP adapter proves success, error mapping and timeout followed by an outcome query against WireMock.Net (3c).
 
-- Security: review authorization policies per endpoint, the two v1 database roles, secret handling guidance.
-- Runbook notes: migrations (incl. `lock_timeout` retries and backfill jobs), rollback decision table (flag vs redeploy,
-  ADR-0009), rollback floor and snapshot rebuild after a rollback (ADR-0010), dead-letter replay (`storage replay`),
-  flag change procedure, handling orders in `RequiresAttention`.
-- Backlog of follow-up work for the delivery team (see below).
-- Final pass on ADR statuses and `ai-usage.md`.
+### Phase 4 — Handover documentation
+
+| PR | Branch | Scope | Acceptance criteria | Size | Depends on |
+|---|---|---|---|---|---|
+| 4a | `docs/handover` | Final pass on ADR statuses and implementation notes, README and plan status, next steps and backlog, `ai-usage.md` for PRs 2a–3c | Every ADR and plan section matches what was delivered; each next step and backlog item has an owner-facing description; `ai-usage.md` covers every merged PR | S | 2a–3c |
+
+## Next steps for the delivery team
+
+Specified in the ADRs but not built in the assessment. The split follows the same [Delivery workflow](#delivery-workflow)
+rules; `N` ids are stable references for PR names (`next-n3/invoicing`). The unordered
+[follow-up backlog](#follow-up-backlog-for-the-delivery-team-out-of-assessment-scope) comes after these.
+
+| Id | Scope | Acceptance criteria (automated tests) | Size | Depends on |
+|---|---|---|---|---|
+| N1 | Atomic idempotency completion: state-changing Ordering handlers store the completed idempotency record in the same Marten session as the order events; the endpoint filter does not overwrite it (ADR-0020) | A simulated crash after the handler commits and before the filter stores the response: a retry after the lease returns the original result and creates no second order | S–M | 2j |
+| N2 | Remove the development-only diagnostics endpoint from PR 1b; move its tests to the Ordering endpoints | `/v1/_diagnostics/echo` returns `404` in Development; authentication, idempotency, problem details and flag tests run against Ordering endpoints | S | N1 |
+| N3 | Invoicing step: `IssueInvoice` command and handler (Billing), `InvoiceIssued` and its Ordering handler; `InventoryReserved` triggers invoicing | A reserved order reaches `AwaitingPayment`; the invoice uses the latest recorded breakdown | M | 2e, 2i, 3a |
+| N4 | Payment check: `CheckInvoiceStatus` handler; daily durable timer scheduled on `InvoiceIssued` and re-scheduled after each check; `InvoicePaid` / `InvoicePartiallyPaid` and their Ordering handlers | Timer scheduled at issue time; paid → `Processing`; no change re-schedules the check; the timer handler is invoked by sending the scheduled message | M | N3 |
+| N5 | `POST /v1/orders/{id}/payment-status/refresh` sending the same `CheckInvoiceStatus` command as the timer | Refresh of an order in `AwaitingPayment` triggers the check; `409` in other states | S | N4 |
+| N6 | Overdue invoices: `InvoiceOverdue` timer at issue time + 3 days (UTC); `VoidInvoice` command and handler; cancellation from `Invoicing` / `AwaitingPayment` voids the invoice | Unpaid invoice past its due date cancels the order, voids the invoice and releases inventory; partially paid → `RequiresAttention`; payment received after cancellation → `RequiresAttention` | M | N4, 2j |
+| N7 | `POST /v1/orders/{id}/items/reduce`: reprice, `OrderItemsReduced`, reserve again | `AwaitingCustomer` → `ValidatingInventory` with a new breakdown; `409` in other states | M | 2i |
+| N8 | `CustomerResponseTimeout` on entering `AwaitingCustomer` (+7 days, configurable, shortened in tests) | Timeout cancels the order; a timeout after the state moved on is ignored | S | N7 |
+| N9 | Fulfilment step: `RequestShipment` on `InvoicePaid`; `ShipmentDispatched`, `ShipmentDelivered`, `FulfilmentFailed` and their Ordering handlers | `Processing` → `Shipped` → `Delivered`; a failure → `FulfilmentOnHold` | M | N4, 3b |
+| N10 | `PUT /v1/orders/{id}/fulfilment-information`: new address/contact stored in Customers, the order references the new ids | `FulfilmentOnHold` → `Processing`; events still contain no personal data | M | N9, 2b |
+| N11 | Refunding compensation: `CancelShipmentRequest`, `RefundInvoice`, release inventory, `RefundCompleted`; customer response timeout on `FulfilmentOnHold` | Cancel from `FulfilmentOnHold` → `Refunding` → `Cancelled`; the timeout does the same | M | N6, N8, N9 |
+| N12 | Back-office endpoints: `POST /v1/backoffice/orders/{id}/cancel` (mandatory reason), `POST /v1/backoffice/orders/{id}/resolve` | Support-agent policy enforced; cancel from `Processing` → `Refunding` with the reason on the event; resolve only in `RequiresAttention` | M | N11 |
+| N13 | One local queue per integration (bounded parallelism) with scheduled exponential backoff, then dead letter; exhausted compensation → `RequiresAttention`. No listener circuit breaker (ADR-0014) | With the fake billing provider down, messages are rescheduled (not dead-lettered) and complete after it recovers **without a restart**; exhausted compensation moves the order to `RequiresAttention` | M | N3 |
+| N14 | Durability test category: two Api processes in `DurabilityMode.Balanced` (ADR-0022) | Killing one process while a timer, a retry and a compensation are pending: the other completes them; a durable message whose type the running build does not know is not lost silently (result recorded in ADR-0010 rule 8) | M | N6, N11, N13 |
+| N15 | Security hardening: test that every endpoint has an explicit authorization policy; the two v1 database roles and secret handling guidance (ADR-0016) | A test fails for an endpoint mapped without a policy | S | N12 |
+| N16 | Runbook: migrations (incl. `lock_timeout` retries and backfill jobs), rollback decision table (flag vs redeploy, ADR-0009), rollback floor and snapshot rebuild after a rollback (ADR-0010), dead-letter replay (`storage replay`), flag change procedure, handling orders in `RequiresAttention` | Docs only; reviewed against ADR-0009, 0010, 0014, 0019 | S | N14 |
 
 ## Timebox allocation (assessment: 4–6 h)
 
@@ -262,12 +290,13 @@ Acceptance criteria:
 | Architecture docs + ADRs | Full | 1.5 h |
 | Phase 0 | All seven spikes executed (more than planned — S3, S4 and S7 changed the design) | 1 h (actual) |
 | Phase 1 | Full, as three PRs (1a runtime, 1b API/security, 1c tests/CI); CI deployment stages stubbed | 2 h (+ review time) |
-| Phase 2 | Full state machine + submit / reserve / get / cancel slice | 1.5 h |
-| Phase 3 | Billing and shipping ports, timer registration and fakes only; no real adapters | 0.5 h |
-| Phase 4 | Documentation only | 0.25 h |
+| Phase 2 | Full state machine + submit / reserve / get / cancel slice, 10 PRs | 1.5 h |
+| Phase 3 | Billing and shipping ports with fakes, one billing HTTP adapter, 3 PRs | 0.5 h |
+| Phase 4 | Handover documentation, 1 PR | 0.25 h |
 
-Phase 0 took longer than budgeted; the overrun is absorbed by keeping Phase 3 at ports, fakes and timer registration
-only. Beyond the timebox, a delivery team would complete Phase 3 in full and Phase 4 before the first production release.
+Phase 0 took longer than budgeted, and Phase 1 PRs proved too large to review. Phases 2–4 are therefore limited to one
+working example per functional requirement, delivered as 14 small PRs (about 15 minutes of review each, on top of the
+estimates). Beyond the timebox, a delivery team works through the next steps before the first production release.
 
 ## Risks
 
@@ -291,11 +320,13 @@ only. Beyond the timebox, a delivery team would complete Phase 3 in full and Pha
 | PRs 1a and 1b merged before CI exists | Regressions not caught automatically | Manual verification evidence per acceptance criterion in each PR; PR 1c adds automated tests for all 1a/1b criteria before Phase 2 starts |
 | Hosting platform not chosen | Deployment stages cannot be completed | Runtime requirements listed in ADR-0021; decision needed before the first non-local environment |
 | Breaking API change slips into `/v1` | Integrated customer systems break | OpenAPI breaking change check in CI; release flags for new API surface (ADR-0020) |
+| The skeleton stops before invoicing: timers, retry queues and `Balanced`-mode durability are specified but not built | Delivery team meets these patterns without a worked example | ADR-0005, 0014 and 0017 specify them; spikes S1 and S7 proved the underlying behaviour; next steps N4, N13 and N14 come with the tests that prove them |
+| Large PRs cannot be reviewed properly (seen in Phase 1) | Defects and unintended design changes merged unnoticed | Size budget, one concern per PR and tests in the same PR (Delivery workflow) |
 
 ## Open questions
 
 None blocking. Business assumptions are recorded in [README §2](README.md#2-domain-scope-a-b2b-ordering-platform) and
-should be validated with the business before Phase 3.
+should be validated with the business before the invoicing and fulfilment next steps (N3 onwards).
 
 Resolved: expand/contract sync mechanism is chosen per change in v1 (ADR-0009); enforcement test is part of Phase 1;
 feature flags start with Microsoft.FeatureManagement (ADR-0019); domain fixed as B2B with invoice payment and the
@@ -305,7 +336,7 @@ Phase 0 findings incorporated (see [phase-0-results](phase-0-results.md)).
 
 ## Follow-up backlog for the delivery team (out of assessment scope)
 
-- Real adapters for inventory, billing and fulfilment/shipping systems.
+- Real adapters for inventory, billing and fulfilment/shipping systems (billing: complete the PR 3c reference adapter against the real provider contract).
 - Billing webhook (`POST /webhooks/billing`, signature validation) feeding `CheckInvoiceStatus`; shipping event webhooks.
 - Support tooling for `RequiresAttention` orders (queue, late-payment refund or reinstatement).
 - Returns after shipment, partial shipments, multi-currency, credit limits and configurable payment terms (out of scope per README §2).

@@ -44,7 +44,7 @@ defaults so features inherit them.
 - Partitions (revised in PR 1b): `account:<account_id>` for customer callers, `agent:<sub>` for authenticated callers
   without an account (support agents), and the **remote address** for unauthenticated requests — an unauthenticated
   request has no verified client id, so the original "client id" wording could not be implemented. Behind a proxy or
-  ingress, forwarded headers must be configured so the remote address is the client's (Phase 4 hardening).
+  ingress, forwarded headers must be configured so the remote address is the client's (backlog).
 
 ### Personal data
 

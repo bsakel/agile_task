@@ -185,12 +185,12 @@ processing until a restart. This is the fallback foreseen in the plan: rely on s
 failure towards an unavailable provider stays in the HTTP resilience pipeline (Polly circuit breaker), which makes each
 attempt cheap. The stall is worth reporting upstream; the design does not depend on it being fixed.
 
-**Changes:** ADR-0014, plan Phase 3 acceptance criteria.
+**Changes:** ADR-0014, plan Phase 3 acceptance criteria (moved to next step N13 when Phases 2–4 were re-planned).
 
 ## Follow-up verifications (moved into later phases)
 
 | Item | Where |
 |---|---|
-| Crash recovery in `DurabilityMode.Balanced` with two API instances | Phase 3 durability test |
+| Crash recovery in `DurabilityMode.Balanced` with two API instances | Durability tests (plan next step N14) |
 | Pre-generated Wolverine code inside the container build | Phase 1 Dockerfile |
 | Upstream issue for breaker + scheduled retry stall | Backlog |

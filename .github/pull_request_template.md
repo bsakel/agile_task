@@ -6,6 +6,11 @@
 
 <!-- e.g. ADR-0004, ADR-0008 -->
 
+## How to review
+
+<!-- Files in suggested reading order (domain/contracts first, then wiring, then tests), and the changed line count
+     against the size budget in the plan's Delivery workflow. -->
+
 ## Acceptance criteria and evidence
 
 <!-- One row per acceptance criterion from architecture/implementation-plan.md.

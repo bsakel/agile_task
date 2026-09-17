@@ -1,5 +1,6 @@
 using OrderPlatform.BuildingBlocks;
 using OrderPlatform.BuildingBlocks.FeatureFlags;
+using OrderPlatform.BuildingBlocks.Messaging;
 
 namespace OrderPlatform.Api.Diagnostics;
 
@@ -9,7 +10,7 @@ public sealed record EchoDiagnostics(
     string Message,
     Money? Amount,
     Guid? TargetAccountId,
-    EchoSimulation Simulate);
+    EchoSimulation Simulate) : ICommand;
 
 public enum EchoSimulation
 {

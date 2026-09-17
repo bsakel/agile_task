@@ -1,0 +1,4 @@
+# Stored message type names (Wolverine) and event aliases (Marten), pinned by ContractNamesTests (ADR-0010).
+# Never change an existing line: keep the stored name with an explicit alias instead. New lines are reviewed additions.
+message OrderPlatform.Api.Diagnostics.EchoDiagnostics <- OrderPlatform.Api.Diagnostics.EchoDiagnostics
+message OrderPlatform.BuildingBlocks.Infrastructure.Http.Idempotency.CleanUpIdempotencyRecords <- OrderPlatform.BuildingBlocks.Infrastructure.Http.Idempotency.CleanUpIdempotencyRecords

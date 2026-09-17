@@ -1,0 +1,88 @@
+# Main branch pipeline (ADR-0021): pull request checks, image build stage, and deployment stages.
+# Deployment stages are stubs until a hosting platform is chosen; they document the required sequence.
+name: Main
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: main
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    name: Pull request checks
+    uses: ./.github/workflows/pull-request.yml
+
+  images:
+    name: Build images
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TAG: ${{ github.sha }}
+      TRIVY_IMAGE: aquasec/trivy@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969
+      SYFT_IMAGE: anchore/syft@sha256:95fe0835e5bebc6f8b1f8acef68d47d63d594ef4c0f25c097ff853b23cbac74c
+    steps:
+      - uses: actions/checkout@v4
+
+      # Built once per commit and promoted by digest; the Api image contains pre-generated Wolverine code.
+      - name: Build
+        run: |
+          docker build -f src/Host/OrderPlatform.Api/Dockerfile -t orderplatform-api:$TAG .
+          docker build -f src/Tools/OrderPlatform.Migrator/Dockerfile -t orderplatform-migrator:$TAG .
+
+      - name: SBOM
+        run: |
+          mkdir -p artifacts
+          for image in orderplatform-api orderplatform-migrator; do
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$SYFT_IMAGE" "$image:$TAG" -o spdx-json > "artifacts/$image.sbom.spdx.json"
+          done
+
+      - name: Image vulnerability scan
+        run: |
+          for image in orderplatform-api orderplatform-migrator; do
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE" image \
+              --exit-code 1 --severity CRITICAL,HIGH --ignore-unfixed --no-progress "$image:$TAG"
+          done
+
+      - name: Publish SBOMs
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: artifacts/*.sbom.spdx.json
+
+      - name: Push images
+        run: |
+          echo "::notice::Stub: push orderplatform-api:$TAG and orderplatform-migrator:$TAG to the registry of the chosen hosting platform and record their digests (ADR-0021)."
+
+  deploy-staging:
+    name: Deploy to Test/Staging (stub)
+    needs: images
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Deployment sequence
+        run: |
+          echo "::notice::Stub until a hosting platform is chosen (ADR-0021). Sequence for ${{ github.sha }}:"
+          echo "0. Check the rollback floor: refuse versions older than the environment's recorded floor (ADR-0010 rule 6)"
+          echo "1. Run orderplatform-migrator as a one-off job with the Migrator role; stop on failure (ADR-0008)"
+          echo "2. Rolling update of orderplatform-api; traffic only after /health/ready (ADR-0021)"
+          echo "3. Smoke tests against the environment"
+          echo "4. On failure after step 2: redeploy the previous Api image; the schema stays (ADR-0009)"
+
+  deploy-production:
+    name: Deploy to Production (stub)
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    # Manual approval: configure required reviewers on the "production" environment.
+    environment: production
+    steps:
+      - name: Deployment sequence
+        run: |
+          echo "::notice::Stub: same sequence and the same image digests as Test/Staging (ADR-0021)."

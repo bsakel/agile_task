@@ -41,3 +41,6 @@ if (app.Environment.IsDevelopment())
 
 // Also exposes the JasperFx/Wolverine command line (e.g. "codegen write" during the image build, ADR-0021).
 return await app.RunJasperFxCommands(args);
+
+/// <summary>Entry point type, public so test hosts can start the Api (WebApplicationFactory, ADR-0022).</summary>
+public partial class Program;

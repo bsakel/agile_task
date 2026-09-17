@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Module boundary, layering and registration rules (ADR-0015). Runs without Docker. -->
+  <ItemGroup>
+    <PackageReference Include="TngTech.ArchUnitNET.xUnitV3" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Host\OrderPlatform.Api\OrderPlatform.Api.csproj" />
+  </ItemGroup>
+</Project>

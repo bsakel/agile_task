@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The only component that changes the database schema; runs to completion before the Api (ADR-0008). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="dbup-postgresql" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Host\OrderPlatform.Composition\OrderPlatform.Composition.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The Migrator's own schema (run history), with the same script layout as the modules. -->
+    <EmbeddedResource Include="Migrations\**\*.sql" LogicalName="migrations/%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

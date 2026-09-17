@@ -1,0 +1,55 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/AppHost/">
+    <Project Path="src/AppHost/OrderPlatform.AppHost/OrderPlatform.AppHost.csproj" />
+    <Project Path="src/AppHost/OrderPlatform.ServiceDefaults/OrderPlatform.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/src/BuildingBlocks/">
+    <Project Path="src/BuildingBlocks/OrderPlatform.BuildingBlocks.Infrastructure/OrderPlatform.BuildingBlocks.Infrastructure.csproj" />
+    <Project Path="src/BuildingBlocks/OrderPlatform.BuildingBlocks/OrderPlatform.BuildingBlocks.csproj" />
+  </Folder>
+  <Folder Name="/src/Host/">
+    <Project Path="src/Host/OrderPlatform.Api/OrderPlatform.Api.csproj" />
+    <Project Path="src/Host/OrderPlatform.Composition/OrderPlatform.Composition.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Billing/">
+    <Project Path="src/Modules/Billing/Billing.Application/Billing.Application.csproj" />
+    <Project Path="src/Modules/Billing/Billing.Contracts/Billing.Contracts.csproj" />
+    <Project Path="src/Modules/Billing/Billing.Domain/Billing.Domain.csproj" />
+    <Project Path="src/Modules/Billing/Billing.Infrastructure/Billing.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Customers/">
+    <Project Path="src/Modules/Customers/Customers.Application/Customers.Application.csproj" />
+    <Project Path="src/Modules/Customers/Customers.Contracts/Customers.Contracts.csproj" />
+    <Project Path="src/Modules/Customers/Customers.Domain/Customers.Domain.csproj" />
+    <Project Path="src/Modules/Customers/Customers.Infrastructure/Customers.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Inventory/">
+    <Project Path="src/Modules/Inventory/Inventory.Application/Inventory.Application.csproj" />
+    <Project Path="src/Modules/Inventory/Inventory.Contracts/Inventory.Contracts.csproj" />
+    <Project Path="src/Modules/Inventory/Inventory.Domain/Inventory.Domain.csproj" />
+    <Project Path="src/Modules/Inventory/Inventory.Infrastructure/Inventory.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Ordering/">
+    <Project Path="src/Modules/Ordering/Ordering.Application/Ordering.Application.csproj" />
+    <Project Path="src/Modules/Ordering/Ordering.Contracts/Ordering.Contracts.csproj" />
+    <Project Path="src/Modules/Ordering/Ordering.Domain/Ordering.Domain.csproj" />
+    <Project Path="src/Modules/Ordering/Ordering.Infrastructure/Ordering.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Pricing/">
+    <Project Path="src/Modules/Pricing/Pricing.Application/Pricing.Application.csproj" />
+    <Project Path="src/Modules/Pricing/Pricing.Contracts/Pricing.Contracts.csproj" />
+    <Project Path="src/Modules/Pricing/Pricing.Domain/Pricing.Domain.csproj" />
+    <Project Path="src/Modules/Pricing/Pricing.Infrastructure/Pricing.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Shipping/">
+    <Project Path="src/Modules/Shipping/Shipping.Application/Shipping.Application.csproj" />
+    <Project Path="src/Modules/Shipping/Shipping.Contracts/Shipping.Contracts.csproj" />
+    <Project Path="src/Modules/Shipping/Shipping.Domain/Shipping.Domain.csproj" />
+    <Project Path="src/Modules/Shipping/Shipping.Infrastructure/Shipping.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Tools/">
+    <Project Path="src/Tools/OrderPlatform.Migrator/OrderPlatform.Migrator.csproj" />
+  </Folder>
+</Solution>

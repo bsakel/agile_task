@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Aggregates, value objects and domain rules. No I/O and no framework dependencies (ADR-0003, ADR-0015). -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\OrderPlatform.BuildingBlocks\OrderPlatform.BuildingBlocks.csproj" />
+  </ItemGroup>
+</Project>

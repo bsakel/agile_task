@@ -27,6 +27,9 @@ Handlers are plain classes with no framework base types, which keeps the applica
   - Development and tests reference `WolverineFx.RuntimeCompilation` (`TypeLoadMode.Dynamic`).
   - Container images use **pre-generated handler code** (`codegen write` during the image build) with
     `TypeLoadMode.Static`, so production needs no Roslyn at runtime (ADR-0021).
+  - Because Wolverine is configured in the shared composition project, `ApplicationAssembly` is set explicitly to the
+    host's entry assembly; otherwise Wolverine looks for pre-generated code in the composition assembly and silently
+    falls back to a runtime scan (found while implementing PR 1a).
 - **Explicit handler discovery:** each module registers its own assembly for handler discovery in its `IModule`, and
   handler classes follow one naming rule: `<Message>Handler` (singular). Discovery must never depend on accidental naming.
 - **No silent drops:** publishing a message without a handler does nothing in Wolverine. A test asserts that **every

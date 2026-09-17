@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Command/query handlers (<Message>Handler) and ports. No HTTP or persistence technology (ADR-0004, ADR-0011). -->
+  <ItemGroup>
+    <ProjectReference Include="..\Ordering.Domain\Ordering.Domain.csproj" />
+    <ProjectReference Include="..\Ordering.Contracts\Ordering.Contracts.csproj" />
+  </ItemGroup>
+</Project>

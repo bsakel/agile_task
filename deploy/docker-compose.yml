@@ -1,0 +1,84 @@
+# Local environment without the .NET toolchain, and the basis of the CI smoke test (ADR-0013, ADR-0021).
+#   docker compose -f deploy/docker-compose.yml up --build
+# Api: http://localhost:8081   Keycloak: http://localhost:8080   Aspire Dashboard: http://localhost:18888
+name: orderplatform
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: orderplatform
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-orderplatform-dev}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d orderplatform"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.4
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_HEALTH_ENABLED: "true"
+      # Tokens are requested from the host (localhost:8080) and validated by the Api inside the network (keycloak:8080):
+      # a fixed issuer plus dynamic back-channel URLs keeps both working.
+      KC_HOSTNAME: http://localhost:8080
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import:ro
+    healthcheck:
+      # The Keycloak image has no curl; use bash's /dev/tcp against the management port.
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q '\"UP\"' <&3"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+
+  aspire-dashboard:
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:13.5.2
+    environment:
+      ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
+    ports:
+      - "18888:18888"
+
+  migrator:
+    build:
+      context: ..
+      dockerfile: src/Tools/OrderPlatform.Migrator/Dockerfile
+    environment:
+      ConnectionStrings__orderplatform: Host=postgres;Port=5432;Database=orderplatform;Username=postgres;Password=${POSTGRES_PASSWORD:-orderplatform-dev};Gss Encryption Mode=Disable
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://aspire-dashboard:18889
+      OTEL_SERVICE_NAME: migrator
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build:
+      context: ..
+      dockerfile: src/Host/OrderPlatform.Api/Dockerfile
+    environment:
+      ConnectionStrings__orderplatform: Host=postgres;Port=5432;Database=orderplatform;Username=postgres;Password=${POSTGRES_PASSWORD:-orderplatform-dev};Gss Encryption Mode=Disable
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://aspire-dashboard:18889
+      OTEL_SERVICE_NAME: api
+    ports:
+      - "8081:8080"
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+      keycloak:
+        condition: service_healthy
+      aspire-dashboard:
+        condition: service_started
+
+volumes:
+  postgres-data:

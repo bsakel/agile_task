@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Composition root shared by the Api and the Migrator: the module list and the Marten/Wolverine configuration. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Aspire.Npgsql" />
+    <PackageReference Include="WolverineFx.Marten" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\AppHost\OrderPlatform.ServiceDefaults\OrderPlatform.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\BuildingBlocks\OrderPlatform.BuildingBlocks.Infrastructure\OrderPlatform.BuildingBlocks.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Ordering\Ordering.Infrastructure\Ordering.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Customers\Customers.Infrastructure\Customers.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Pricing\Pricing.Infrastructure\Pricing.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Inventory\Inventory.Infrastructure\Inventory.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Billing\Billing.Infrastructure\Billing.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Shipping\Shipping.Infrastructure\Shipping.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

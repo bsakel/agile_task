@@ -1,0 +1,16 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.5.4">
+  <!-- Local orchestration for .NET developers (ADR-0013). Deployment does not depend on it (ADR-0021). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UserSecretsId>orderplatform-apphost</UserSecretsId>
+    <!-- The AppHost is run with "dotnet run"; the Aspire CLI bundle is not required. -->
+    <NoWarn>$(NoWarn);ASPIRE010</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Host\OrderPlatform.Api\OrderPlatform.Api.csproj" />
+    <ProjectReference Include="..\..\Tools\OrderPlatform.Migrator\OrderPlatform.Migrator.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!-- HTTP host for all modules (ADR-0002, ADR-0011). -->
+  <ItemGroup>
+    <!-- Runtime compilation of Wolverine handler code for development and tests; images use pre-generated code (ADR-0004). -->
+    <PackageReference Include="WolverineFx.RuntimeCompilation" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\OrderPlatform.Composition\OrderPlatform.Composition.csproj" />
+  </ItemGroup>
+</Project>

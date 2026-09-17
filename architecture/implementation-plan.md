@@ -77,8 +77,12 @@ Deliverables:
   versions, pinned as above).
 - `OrderPlatform.ServiceDefaults`: OpenTelemetry (traces, metrics, logs, OTLP exporter), health checks (`/health/live`,
   `/health/ready`), standard HTTP resilience.
-- `OrderPlatform.BuildingBlocks`: `Result` and error types, `IModule` abstraction, clock (`TimeProvider`),
-  `RelationalOutbox` helper enlisting an `NpgsqlTransaction` in the Wolverine outbox (ADR-0007).
+- `OrderPlatform.BuildingBlocks`: technology-free `Result` and error types (referenced by Domain and Contracts).
+- `OrderPlatform.BuildingBlocks.Infrastructure`: `IModule` abstraction and the `RelationalOutbox` helper enlisting an
+  `NpgsqlTransaction` in the Wolverine outbox (ADR-0007). Split from BuildingBlocks so Domain and Contracts projects
+  never depend on Marten, Wolverine or ASP.NET Core (ADR-0015).
+- `OrderPlatform.Composition`: the module list and the Marten/Wolverine configuration shared by the Api and the
+  Migrator (ADR-0008), the clock (`TimeProvider`), and the migrated-schema startup guard and readiness check.
 - `OrderPlatform.Api`: host, Wolverine configured with durable local queues + Marten integration, module registration via `IModule`.
   - Wolverine: `WolverineFx.RuntimeCompilation` for development/tests, `TypeLoadMode.Static` when `codegen` output is
     present; explicit handler discovery per module assembly; `<Message>Handler` naming (ADR-0004).
@@ -87,7 +91,8 @@ Deliverables:
 - Module shells for all **six** modules (Ordering, Customers, Pricing, Inventory, Billing, Shipping — four projects
   each, empty `IModule` registration, empty DbUp script folder).
 - `OrderPlatform.Migrator` (ADR-0008): DbUp runner without DbUp transactions (per-module script folders, journal per
-  schema, retry on `lock_timeout`), Marten schema apply, Wolverine storage setup, final schema assert; exits non-zero on failure.
+  schema, retry on `lock_timeout`), Marten schema apply, Wolverine storage setup, final schema assert, run record in
+  `platform.migrator_runs`; exits non-zero on failure.
 - `OrderPlatform.AppHost`: Postgres, Keycloak as a plain container with realm import (ADR-0013), Migrator (wait for
   completion), Api (wait for Migrator and Keycloak).
 - `deploy/docker-compose.yml`: Postgres, Keycloak, Migrator, Api, standalone Aspire Dashboard as OTLP receiver;
@@ -97,7 +102,8 @@ Deliverables:
 Acceptance criteria (verified manually, evidence in the PR):
 - `dotnet build` succeeds with warnings as errors.
 - `docker compose up` and `dotnet run --project src/AppHost/...` both start the system, run the Migrator first and show
-  traces for a health check request in the dashboard.
+  traces in the dashboard (the Migrator run with its steps, and the Api's database activity). Health probe requests are
+  intentionally excluded from traces.
 - Starting the Api against an empty database (Migrator not run) fails at startup with a clear message.
 - The Api container starts in static code generation mode.
 
@@ -289,4 +295,6 @@ Phase 0 findings incorporated (see [phase-0-results](phase-0-results.md)).
   and the deployment stages of the pipeline (ADR-0021).
 - Load testing and capacity baseline.
 - Report the listener circuit breaker + scheduled retry stall to the Wolverine project with the S7 reproduction; revisit ADR-0014 when fixed.
+- Reduce trace noise from Wolverine's background polling (one database span per second per instance, seen in PR 1a):
+  filter or sample those spans in ServiceDefaults once real traffic makes the noise matter (ADR-0012).
 - Automate snapshot projection rebuilds after a rollback past a new event type (manual runbook step in v1, ADR-0010).

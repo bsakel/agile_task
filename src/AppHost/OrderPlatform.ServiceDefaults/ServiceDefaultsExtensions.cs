@@ -74,15 +74,16 @@ public static class ServiceDefaultsExtensions
 
     /// <summary>
     /// Maps <c>/health/live</c> (the process is running) and <c>/health/ready</c> (all checks, including dependencies).
-    /// Mapped in every environment because the hosting platform uses them as probes (ADR-0021).
+    /// Mapped in every environment because the hosting platform uses them as probes (ADR-0021); anonymous, because probes
+    /// carry no token.
     /// </summary>
     public static WebApplication MapDefaultEndpoints(this WebApplication app)
     {
         app.MapHealthChecks("/health/live", new HealthCheckOptions
         {
             Predicate = check => check.Tags.Contains(LivenessTag),
-        });
-        app.MapHealthChecks("/health/ready");
+        }).AllowAnonymous();
+        app.MapHealthChecks("/health/ready").AllowAnonymous();
 
         return app;
     }

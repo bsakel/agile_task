@@ -67,7 +67,11 @@ services:
       context: ..
       dockerfile: src/Host/OrderPlatform.Api/Dockerfile
     environment:
+      # A local environment: fake integrations and the diagnostics endpoint are allowed (ADR-0014).
+      ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__orderplatform: Host=postgres;Port=5432;Database=orderplatform;Username=postgres;Password=${POSTGRES_PASSWORD:-orderplatform-dev};Gss Encryption Mode=Disable
+      # Tokens carry the issuer http://localhost:8080 (KC_HOSTNAME); signing keys are fetched inside the network.
+      Authentication__Schemes__Bearer__MetadataAddress: http://keycloak:8080/realms/orderplatform/.well-known/openid-configuration
       OTEL_EXPORTER_OTLP_ENDPOINT: http://aspire-dashboard:18889
       OTEL_SERVICE_NAME: api
     ports:

@@ -17,7 +17,9 @@ defaults so features inherit them.
 - JWT bearer tokens from an external **OpenID Connect** identity provider; the platform stores no passwords.
 - **Customer system integrations:** OAuth2 **client credentials**; each client is registered for exactly one customer
   account and its tokens carry the `account_id` claim.
-- **Portal users:** authorization code flow with PKCE (portal itself out of scope); tokens carry `account_id`.
+- **Portal users:** authorization code flow with PKCE (portal itself out of scope); tokens carry `account_id`. Order
+  scopes are **optional** client scopes for users: the portal requests only the scopes a screen needs (least privilege).
+  Customer system clients get their scopes by default.
 - **Support agents:** authenticated through the same provider, with a `support-agent` role; no `account_id` restriction.
 - **Local development:** a **Keycloak** container in both Aspire and docker-compose with a pre-configured realm:
   one customer client per test account (two accounts), one portal user, one support agent (ADR-0013).
@@ -29,11 +31,20 @@ defaults so features inherit them.
   returns `404`, not `403`, so existence is not leaked (ADR-0020).
 - Back-office endpoints require the `support-agent` policy; support actions record the agent identity and a mandatory
   reason on the order stream.
+- Implementation (PR 1b): a fallback policy requires an authenticated caller on every endpoint (health probes and the
+  OpenAPI document opt out explicitly). Policies: one per scope (named like the scope), `customer-account` (token has
+  `account_id`) and `support-agent` (`roles` contains `support-agent`). Customer endpoints combine `customer-account`
+  with a scope policy. Handlers receive the caller's account id in the command and use `AccountAccess.EnsureOwnedBy`,
+  which returns a not-found error. Token claims are kept as issued (`sub`, `scope`, `roles`, `account_id`).
 
 ### Abuse protection
 
-- ASP.NET Core **rate limiting partitioned by `account_id`** (client id for unauthenticated requests), with a stricter
-  limit on `POST /v1/orders`. Limits are configuration; exceeding them returns `429` with `Retry-After`.
+- ASP.NET Core **rate limiting partitioned by `account_id`**, with a stricter limit on `POST /v1/orders`. Limits are
+  configuration; exceeding them returns `429` with `Retry-After`.
+- Partitions (revised in PR 1b): `account:<account_id>` for customer callers, `agent:<sub>` for authenticated callers
+  without an account (support agents), and the **remote address** for unauthenticated requests — an unauthenticated
+  request has no verified client id, so the original "client id" wording could not be implemented. Behind a proxy or
+  ingress, forwarded headers must be configured so the remote address is the client's (Phase 4 hardening).
 
 ### Personal data
 

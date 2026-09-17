@@ -144,8 +144,9 @@ src/
   Tools/
     OrderPlatform.Migrator                             DbUp scripts, Marten schema, Wolverine storage, verification (ADR-0008)
   BuildingBlocks/
-    OrderPlatform.BuildingBlocks                       technology-free primitives: Result, Error, IFeatureFlags (usable by Domain/Contracts/Application)
-    OrderPlatform.BuildingBlocks.Infrastructure        IModule, RelationalOutbox (Marten/Wolverine/ASP.NET Core dependent)
+    OrderPlatform.BuildingBlocks                       technology-free primitives: Result, Error, Money, AccountAccess, IFeatureFlags + flag registry (usable by Domain/Contracts/Application)
+    OrderPlatform.BuildingBlocks.Infrastructure        IModule, RelationalOutbox, problem details, idempotency filter, JSON converters,
+                                                       claims/policy names, integration mode guard (Marten/Wolverine/ASP.NET Core dependent)
   Modules/
     Ordering/   Ordering.Domain | Ordering.Application | Ordering.Infrastructure | Ordering.Contracts
     Customers/  ...

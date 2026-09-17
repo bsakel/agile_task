@@ -1,7 +1,7 @@
 # Implementation Plan
 
 Status: **Agreed** — all ADRs accepted. **Phase 0 completed** ([results](phase-0-results.md)); plan and ADRs updated
-with its findings. Next: Phase 1, PR 1a.
+with its findings. Phase 1: PR 1a merged; PR 1b in review. Next: PR 1c.
 
 ## Guiding principles
 
@@ -125,6 +125,14 @@ Deliverables:
   scoping, idempotency, problem details and a feature flag, so the conventions can be verified before any business
   endpoint exists. It is not mapped outside Development and is removed once Phase 2 endpoints cover the same behaviour.
 
+Implementation notes (added in PR 1b):
+- Keycloak realm: the portal client's order scopes became optional client scopes, so a user token with only
+  `orders:read` demonstrates the `403` (ADR-0016).
+- `IModule.MapEndpoints` receives the `/v1` route group; `IModule.FeatureFlags` exposes the module's flag registry.
+- The idempotency claim and the stored response use their own transactions in PR 1b; the Phase 2 Ordering handlers
+  write the completion atomically with the order events (ADR-0020, deliverable added to Phase 2).
+- docker-compose runs the Api as `Development` (fake integrations and the diagnostics endpoint are allowed locally).
+
 Acceptance criteria (verified manually, evidence in the PR):
 - A token obtained from local Keycloak calls the diagnostics endpoint; a request without a token gets `401`; a token
   without the required scope gets `403`.
@@ -179,6 +187,8 @@ Deliverables:
   `ShippingChargeRule` is gated by the example release flag `Pricing.ShippingCharge`; the flag decision is recorded in the
   price breakdown on `OrderSubmitted` (reference example for ADR-0019).
 - Remove the development-only diagnostics endpoint from PR 1b; its integration tests move to the real Ordering endpoints.
+- Close the idempotency atomicity gap (ADR-0020): state-changing Ordering handlers store the completed idempotency
+  record in the same Marten session as the order events, and the endpoint filter does not overwrite it.
 - Tests: aggregate unit tests covering **every transition and every disallowed command**, pricing rule tests (with the
   shipping charge flag on and off), one integration test per endpoint using Testcontainers.
 
@@ -298,3 +308,7 @@ Phase 0 findings incorporated (see [phase-0-results](phase-0-results.md)).
 - Reduce trace noise from Wolverine's background polling (one database span per second per instance, seen in PR 1a):
   filter or sample those spans in ServiceDefaults once real traffic makes the noise matter (ADR-0012).
 - Automate snapshot projection rebuilds after a rollback past a new event type (manual runbook step in v1, ADR-0010).
+- Interactive OpenAPI UI in Development (ADR-0020) and `401`/`403`/`429` responses in the OpenAPI document (PR 1b).
+- AppHost: pin a development Postgres password parameter. The generated password lives in user secrets; if they are
+  reset, the persistent data volume no longer accepts it and the Migrator waits forever (seen while verifying PR 1b).
+- Forwarded headers behind the ingress so anonymous rate limiting partitions by the real client address (ADR-0016).

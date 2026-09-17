@@ -20,4 +20,7 @@ public static class PlatformModules
         new BillingModule(),
         new ShippingModule(),
     ];
+
+    /// <summary>The modules' <c>FeatureFlags</c> registry classes (ADR-0019).</summary>
+    public static IEnumerable<Type> FeatureFlagRegistries => All.Select(module => module.FeatureFlags).OfType<Type>();
 }

@@ -135,7 +135,9 @@
       "webOrigins": ["+"],
       "protocol": "openid-connect",
       "attributes": { "pkce.code.challenge.method": "S256" },
-      "defaultClientScopes": ["basic", "orderplatform-api", "orders:read", "orders:write", "orders:cancel"],
+      "description": "Users request the order scopes they need (least privilege); a token without orders:write is rejected with 403 by write endpoints.",
+      "defaultClientScopes": ["basic", "orderplatform-api"],
+      "optionalClientScopes": ["orders:read", "orders:write", "orders:cancel"],
       "protocolMappers": [
         {
           "name": "account_id",

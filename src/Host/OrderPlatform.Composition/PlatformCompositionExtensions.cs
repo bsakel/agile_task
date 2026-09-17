@@ -5,6 +5,7 @@ using Marten;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using OrderPlatform.BuildingBlocks.Infrastructure.Http.Idempotency;
 using OrderPlatform.BuildingBlocks.Infrastructure.Messaging;
 using OrderPlatform.Composition.Schema;
 using Wolverine;
@@ -21,7 +22,14 @@ public static class PlatformCompositionExtensions
     /// <param name="requireMigratedSchema">
     /// <c>true</c> for the Api: startup fails with an actionable message when the Migrator has not run.
     /// </param>
-    public static IHostApplicationBuilder AddOrderPlatform(this IHostApplicationBuilder builder, bool requireMigratedSchema)
+    /// <param name="configureWolverine">
+    /// Host-only Wolverine configuration, e.g. handlers declared in the host assembly. Must not add storage (queues,
+    /// sagas, schedules) because the Migrator does not see it.
+    /// </param>
+    public static IHostApplicationBuilder AddOrderPlatform(
+        this IHostApplicationBuilder builder,
+        bool requireMigratedSchema,
+        Action<WolverineOptions>? configureWolverine = null)
     {
         builder.AddNpgsqlDataSource(PlatformDatabase.ConnectionName);
 
@@ -48,6 +56,9 @@ public static class PlatformCompositionExtensions
 
                 // The Api never changes the schema, in any environment; the Migrator applies it (ADR-0008).
                 options.AutoCreateSchemaObjects = AutoCreate.None;
+
+                // Platform documents stored next to the Ordering events: idempotency records (ADR-0020).
+                options.ConfigureIdempotency();
 
                 foreach (var module in PlatformModules.All)
                 {
@@ -76,24 +87,30 @@ public static class PlatformCompositionExtensions
                 ? TypeLoadMode.Static
                 : TypeLoadMode.Dynamic;
 
+            options.ConfigureIdempotency(builder.Configuration);
+
             foreach (var module in PlatformModules.All)
             {
                 module.ConfigureWolverine(options);
             }
+
+            configureWolverine?.Invoke(options);
         });
 
         builder.Services.AddRelationalOutbox();
+        builder.Services.AddIdempotency(builder.Configuration);
 
         return builder;
     }
 
-    public static IEndpointRouteBuilder MapOrderPlatformModules(this IEndpointRouteBuilder endpoints)
+    /// <summary>Maps every module's endpoints onto a version route group, e.g. <c>/v1</c> (ADR-0020).</summary>
+    public static IEndpointRouteBuilder MapOrderPlatformModules(this IEndpointRouteBuilder version)
     {
         foreach (var module in PlatformModules.All)
         {
-            module.MapEndpoints(endpoints);
+            module.MapEndpoints(version);
         }
 
-        return endpoints;
+        return version;
     }
 }

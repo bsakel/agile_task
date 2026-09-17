@@ -47,6 +47,19 @@ long-term target, but it is too much machinery for an application with no code y
 6. **Observable.** The adapter records flag evaluations on the current span, following the OpenTelemetry feature-flag
    semantic conventions (ADR-0012).
 
+### Implementation (PR 1b)
+
+- Registry: flag names are `const string` fields annotated with `[FeatureFlag(type) { Owner, Expires }]` in a module's
+  `FeatureFlags` class, exposed through `IModule.FeatureFlags`. The host builds a `FeatureFlagRegistry` at startup and
+  fails if a field has no attribute, a release flag has no expiry date, or a name is registered twice. Evaluating an
+  unregistered name throws. Expired flags are logged as warnings at startup.
+- Names are `<Module>.<Flag>` (e.g. `Pricing.ShippingCharge`); configuration lives in the `FeatureManagement` section
+  (`"FeatureManagement": { "Pricing.ShippingCharge": true }`). JSON configuration files reload on change, so editing the
+  mounted/deployed file switches a flag without a restart; environment variables require a restart.
+- The adapter adds a `feature_flag.evaluation` event with `feature_flag.key`, `feature_flag.provider.name` and
+  `feature_flag.result.value` to the current span (verified on the Wolverine handler span in the dashboard).
+- `Microsoft.FeatureManagement.AspNetCore` is referenced by the Api host only; PR 1c adds the architecture test.
+
 ### Known limitations of v1 (accepted)
 
 | Capability | v1 |

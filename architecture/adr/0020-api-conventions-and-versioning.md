@@ -40,6 +40,12 @@ integrated clients. Clients also retry over unreliable networks, so creating req
 - Each business error has a **stable `type` URI and `errorCode`** (e.g. `order-not-cancellable`) that clients can rely
   on; the `title` and `detail` texts may change.
 - Extensions: `traceId` (for support), `currentState` where relevant, and `errors` for field-level validation errors.
+- `type` is `https://problems.orderplatform.example/<errorCode>` (placeholder host, replaced by the published error
+  documentation URL before go-live; the path stays stable). Responses produced by the framework itself (authentication,
+  routing, model binding, rate limiting, unhandled exceptions) get a code derived from their status: `unauthenticated`,
+  `forbidden`, `not-found`, `method-not-allowed`, `bad-request`, `rate-limited`, `internal-error` (PR 1b).
+- `traceId` is the W3C trace id (32 hex characters), so support can paste it directly into the tracing backend.
+  Exception details are never returned outside Development.
 
 | Status | Used for |
 |---|---|
@@ -64,9 +70,29 @@ integrated clients. Clients also retry over unreliable networks, so creating req
   - Same key, **different body** → `422`.
 - **Retention: 24 hours**, removed by a daily scheduled cleanup message.
 
+#### Implementation (PR 1b)
+
+- An endpoint opts in with `RequireIdempotencyKey()`; a missing header returns `400` (`idempotency-key-required`).
+- The request identity is a SHA-256 hash of method, path, query and the **raw body bytes**: a retry must resend the
+  identical request. A re-serialised body with different whitespace or field order counts as a different request (`422`).
+  This is stricter than comparing parsed JSON but has no ambiguity (e.g. about defaults or number formats).
+- The first request **claims** the key (record `InProgress` with a lease, default 1 minute) before the endpoint runs;
+  a concurrent repeat gets `409`. Responses below `500` are stored and replayed with the header
+  `Idempotent-Replayed: true`. A `5xx` response or an exception **releases** the claim so the client can retry. A claim
+  left behind by a crashed process can be taken over after its lease expires (optimistic concurrency on the record).
+- The daily cleanup is a Wolverine **recurring (cron) message** (`CleanUpIdempotencyRecords`, `0 3 * * *` UTC): durable,
+  one publisher per cluster, and changes to the schedule are applied by the nodes on startup.
+- **Atomicity gap until Phase 2:** in PR 1b the claim and the stored response are written in their own transactions,
+  around the endpoint. If the process crashes after a business handler committed but before the response was stored, a
+  retry after the lease would execute the command again. Phase 2 closes the gap for state-changing Ordering endpoints:
+  the handler completes the record **in the same Marten session** as the order events (see the implementation plan).
+
 ### Documentation
 
-- OpenAPI document per version generated with `Microsoft.AspNetCore.OpenApi`; an interactive UI is enabled in Development only.
+- OpenAPI document per version generated with `Microsoft.AspNetCore.OpenApi` (`/openapi/v1.json`, anonymous, all
+  environments); an interactive UI is enabled in Development only (not yet added, see the backlog). The document
+  describes the bearer scheme, the `Idempotency-Key` header and the `Money` / timestamp formats, which custom JSON
+  converters hide from the schema generator.
 - The OpenAPI document is published as a build artifact; a CI check flags **removed or changed** operations and fields
   compared with the previous release (breaking change detection).
 

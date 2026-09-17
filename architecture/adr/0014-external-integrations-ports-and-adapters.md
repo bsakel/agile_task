@@ -56,6 +56,10 @@ signature-verified, stored raw, and converted into messages.
 - Each integration has a mode in configuration: `Integrations:<System>:Mode = Fake | Http`.
 - **Fake adapters** exist for local development and tests.
 - **The host fails to start if any integration is in `Fake` mode outside the `Development` or `Test` environments.**
+- Implementation (PR 1b): a startup guard in the Api reads every `Integrations:<System>:Mode`; an invalid value fails
+  startup in every environment, and a missing mode means `Http`, so fakes are always an explicit opt-in.
+  `appsettings.json` declares `Http` for Inventory, Billing and Shipping, `appsettings.Development.json` declares `Fake`.
+  The local docker-compose environment runs the Api as `Development` for the same reason.
 
 ### Verifying adapters
 

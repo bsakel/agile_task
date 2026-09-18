@@ -25,6 +25,18 @@ The platform supports:
 This repository delivers an **implementation-ready skeleton**, not a complete product: the structure, contracts,
 cross-cutting foundations and one fully worked vertical slice (Submit / Get / Cancel Order) that the team copies.
 
+**What is built.** Phases 0 to 4 of the [implementation plan](implementation-plan.md) are delivered. An order can be
+submitted, priced against seeded price lists, reserved in the external inventory system through the outbox, read with
+its history and cancelled with its compensation — all against the schema the Migrator builds, proven by the tests in
+each PR. The complete order state machine of [ADR-0017](adr/0017-order-lifecycle-process.md) is implemented and
+covered by domain tests, including the states no endpoint reaches yet.
+
+**What is not.** Invoicing, payment checks, timers, fulfilment and the retry/dead-letter policy are specified but not
+built: they are the ordered [next steps](implementation-plan.md#next-steps-for-the-delivery-team) N1 to N16. Billing and
+shipping have ports with fakes, and billing additionally has a real-shaped HTTP adapter; the other adapters are next
+steps. One design question is open and should be decided before N3 — see
+[ADR-0017 §2a](adr/0017-order-lifecycle-process.md).
+
 ## 2. Domain scope: a B2B ordering platform
 
 "Order processing" means very different things for an airline, a retail web shop or a B2B supplier. **This platform is
@@ -195,12 +207,17 @@ stateDiagram-v2
     ValidatingInventory --> Cancelled: API cancel (release any reservation)
     Invoicing --> Cancelled: API cancel → void invoice, release inventory
     Cancelled --> RequiresAttention: payment received after cancellation
+    RequiresAttention --> Cancelled: AttentionResolved (support agent, mandatory reason)
     Delivered --> [*]
     Cancelled --> [*]
 ```
 
 Rules live in the Order aggregate, not in endpoints. Details, API surface, timers and failure handling are in
 [ADR-0017](adr/0017-order-lifecycle-process.md).
+
+> **Open issue.** Closing an order as cancelled is the *only* way out of `RequiresAttention` in v1, and support settles
+> the money outside the system. ADR-0017 §6 also mentions reinstatement, which has no target state and needs a business
+> decision before the invoicing next steps — see [ADR-0017 §2a](adr/0017-order-lifecycle-process.md).
 
 ## 9. How the non-functional requirements are addressed
 

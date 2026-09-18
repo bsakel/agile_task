@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Pricing rules, stage order and rounding (ADR-0018, ADR-0022 domain unit level). No infrastructure. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Modules\Pricing\Pricing.Domain\Pricing.Domain.csproj" />
+  </ItemGroup>
+</Project>

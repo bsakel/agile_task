@@ -2,7 +2,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using OrderPlatform.BuildingBlocks.Infrastructure.Modules;
 using OrderPlatform.Pricing.Application;
+using OrderPlatform.Pricing.Application.PriceLists;
+using OrderPlatform.Pricing.Contracts;
 using OrderPlatform.Pricing.Domain;
+using OrderPlatform.Pricing.Infrastructure.PriceLists;
 using Wolverine;
 
 namespace OrderPlatform.Pricing.Infrastructure;
@@ -25,6 +28,10 @@ public sealed class PricingModule : IModule
         }
 
         builder.Services.AddSingleton<PricingPipeline>();
+
+        // The price data of the pricing schema and the query other modules use to price an order (ADR-0003, ADR-0018).
+        builder.Services.AddScoped<IPriceListReader, PriceListReader>();
+        builder.Services.AddScoped<IPricingService, PricingService>();
     }
 
     public void ConfigureWolverine(WolverineOptions options) =>

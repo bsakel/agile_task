@@ -10,7 +10,9 @@ Microsoft.Testing.Platform (`global.json`), assertions use Shouldly.
 | `OrderPlatform.Api.IntegrationTests` | Acceptance criteria of PRs 1a and 1b: Migrator, startup guards, authentication, idempotency, problem details, feature flags, OTLP traces; a module's seeded data read through its contracts against the Migrator-built schema (PR 2b) | Docker |
 | `OrderPlatform.AppHost.Tests` | The Aspire AppHost runs the Migrator to completion before the Api is ready | Docker, free port 8080 |
 | `Billing.Infrastructure.Tests` | Billing adapters: the fake provider's payment states, idempotency keys, outcome query and outage — ADR-0014 | Nothing |
+| `Ordering.Domain.Tests` | Order state machine: every transition and every disallowed command — ADR-0017 | Nothing |
 | `Pricing.Domain.Tests` | Pricing rule pipeline: stage order, rounding, tax per rate, the shipping charge flag on and off — ADR-0018 | Nothing |
+| `Shipping.Infrastructure.Tests` | The fake shipping adapter behind `IShippingGateway`: controllable outcomes, idempotency keys, cancellation and outcome-query failures — ADR-0014 | Nothing |
 | `OrderPlatform.Testing` | Shared infrastructure (not a test project) | — |
 
 ```bash

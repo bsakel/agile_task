@@ -11,6 +11,7 @@ public sealed class OrderBuilder
     public static readonly Guid OrderId = new("0f6b0d5e-0000-4000-8000-000000000001");
     public static readonly Guid AccountId = new("0f6b0d5e-0000-4000-8000-0000000000a1");
     public const string InvoiceId = "INV-2026-0001";
+    public const string ReservationKey = "reserve:0f6b0d5e-0000-4000-8000-000000000001:1";
     public const string TrackingReference = "TRK-2026-0001";
     public static readonly DateTimeOffset At = new(2026, 9, 17, 10, 0, 0, TimeSpan.Zero);
 
@@ -123,7 +124,7 @@ public sealed class OrderBuilder
         }
     }
 
-    private static InventoryReserved Reserved() => new(OrderId, Guid.NewGuid(), At);
+    private static InventoryReserved Reserved() => new(OrderId, ReservationKey, At);
 
     /// <summary>The whole way to Processing: reserved, invoiced and paid in full.</summary>
     private static object[] Paid() => [Reserved(), Issued(), new InvoicePaid(OrderId, InvoiceId, At)];

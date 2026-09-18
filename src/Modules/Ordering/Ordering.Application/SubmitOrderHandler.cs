@@ -1,8 +1,10 @@
 using Marten;
 using OrderPlatform.BuildingBlocks;
 using OrderPlatform.Customers.Contracts;
+using OrderPlatform.Inventory.Contracts;
 using OrderPlatform.Ordering.Domain;
 using OrderPlatform.Pricing.Contracts;
+using Wolverine;
 
 namespace OrderPlatform.Ordering.Application;
 
@@ -17,6 +19,7 @@ public static class SubmitOrderHandler
         ICustomerDirectory customers,
         IPricingService pricing,
         IDocumentSession session,
+        IMessageContext messages,
         TimeProvider timeProvider,
         CancellationToken cancellationToken)
     {
@@ -52,12 +55,29 @@ public static class SubmitOrderHandler
             account.Value.PrimaryContactId,
             timeProvider.GetUtcNow());
 
-        // Wolverine applies the Marten transaction around this handler (ADR-0005); PR 2i sends decision.FollowUps
-        // through the outbox in the same transaction, which is why the order stays in ValidatingInventory here.
         session.Events.StartStream<Order>(orderId, [.. decision.Events]);
+
+        // The stream and the follow-up commit together: Wolverine applies the Marten transaction around this handler and
+        // holds the messages in the outbox until it commits, so an order can never exist without its next step (ADR-0005).
+        foreach (var followUp in decision.FollowUps)
+        {
+            await SendAsync(followUp, orderId, command, messages);
+        }
 
         return new SubmitOrderResponse(orderId, OrderStatus.ValidatingInventory, breakdown);
     }
+
+    /// <summary>
+    /// Translates a step the aggregate decided into the owning module's command (ADR-0003, ADR-0017 §5). Submission can
+    /// only decide to reserve; the compensating steps arrive with the PRs that own their commands.
+    /// </summary>
+    private static Task SendAsync(OrderFollowUp followUp, Guid orderId, SubmitOrder command, IMessageContext messages) => followUp switch
+    {
+        OrderFollowUp.ReserveInventory => messages.SendAsync(new ReserveInventory(
+            orderId,
+            [.. command.Lines.Select(line => new ReservationLine(line.Sku, line.Quantity))])).AsTask(),
+        _ => throw new NotSupportedException($"Submission cannot decide {followUp}."),
+    };
 
     /// <summary>The ordered lines with the unit price Pricing resolved, so the order records what it was priced at.</summary>
     private static IEnumerable<OrderLine> LinesOf(SubmitOrder command, PriceBreakdown breakdown) =>

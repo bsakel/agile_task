@@ -32,7 +32,8 @@ public sealed class Order
 
     public OrderStatus Status { get; private set; }
 
-    public Guid? ReservationId { get; private set; }
+    /// <summary>The handle the reservation is released with: the idempotency key it was made under (ADR-0017 §7).</summary>
+    public string? ReservationKey { get; private set; }
 
     public string? InvoiceId { get; private set; }
 
@@ -56,10 +57,10 @@ public sealed class Order
             OrderFollowUp.ReserveInventory);
 
     /// <summary>Inventory reserved all lines. Arriving after a cancellation, the reservation is released instead (ADR-0017 §6).</summary>
-    public OrderDecision ReservationSucceeded(Guid reservationId, DateTimeOffset now) => Status switch
+    public OrderDecision ReservationSucceeded(string reservationKey, DateTimeOffset now) => Status switch
     {
         OrderStatus.ValidatingInventory => OrderDecision.From(
-            new InventoryReserved(Id, reservationId, now),
+            new InventoryReserved(Id, reservationKey, now),
             OrderFollowUp.IssueInvoice),
         OrderStatus.Cancelled => OrderDecision.FollowUpOnly(OrderFollowUp.ReleaseInventory),
         _ => Ignore(nameof(ReservationSucceeded)),
@@ -128,7 +129,7 @@ public sealed class Order
 
     public void Apply(InventoryReserved @event)
     {
-        ReservationId = @event.ReservationId;
+        ReservationKey = @event.ReservationKey;
         Status = OrderStatus.Invoicing;
     }
 

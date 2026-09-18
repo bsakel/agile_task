@@ -25,6 +25,10 @@ public sealed class OrderingModule : IModule
         options.Events.MapEventType<OrderSubmitted>("order_submitted");
         options.Events.MapEventType<InventoryReserved>("inventory_reserved");
         options.Events.MapEventType<InventoryUnavailable>("inventory_unavailable");
+        options.Events.MapEventType<InvoiceIssued>("invoice_issued");
+        options.Events.MapEventType<InvoicePaid>("invoice_paid");
+        options.Events.MapEventType<InvoicePartiallyPaid>("invoice_partially_paid");
+        options.Events.MapEventType<AttentionRequired>("attention_required");
         options.Events.MapEventType<OrderCancelled>("order_cancelled");
     }
 

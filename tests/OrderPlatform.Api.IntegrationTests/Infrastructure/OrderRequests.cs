@@ -37,6 +37,15 @@ internal static class OrderRequests
     public static Task<HttpResponseMessage> PostOrderAsync(this HttpClient client, string json) =>
         client.PostOrderAsync(EchoRequests.NewKey(), json);
 
+    /// <summary>A state-changing action on an order, which carries an <c>Idempotency-Key</c> but no body (ADR-0020).</summary>
+    public static Task<HttpResponseMessage> PostActionAsync(this HttpClient client, string path)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, path);
+        request.Headers.Add("Idempotency-Key", EchoRequests.NewKey());
+
+        return client.SendAsync(request, TestContext.Current.CancellationToken);
+    }
+
     /// <summary>One line of the given SKU and quantity, as the endpoint expects it.</summary>
     public static string OneLine(string sku, int quantity) =>
         $$"""{"lines":[{"sku":"{{sku}}","quantity":{{quantity}}}]}""";

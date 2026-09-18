@@ -1,4 +1,86 @@
 <Solution>
+  <Folder Name="/architecture/">
+    <File Path="architecture/ai-usage.md" />
+    <File Path="architecture/implementation-plan.md" />
+    <File Path="architecture/phase-0-results.md" />
+    <File Path="architecture/README.md" />
+  </Folder>
+  <Folder Name="/architecture/adr/">
+    <File Path="architecture/adr/0001-record-architecture-decisions.md" />
+    <File Path="architecture/adr/0002-modular-monolith.md" />
+    <File Path="architecture/adr/0003-module-structure-and-communication.md" />
+    <File Path="architecture/adr/0004-wolverine-for-messaging.md" />
+    <File Path="architecture/adr/0005-durable-in-process-messaging.md" />
+    <File Path="architecture/adr/0006-marten-event-sourcing-for-ordering.md" />
+    <File Path="architecture/adr/0007-dapper-and-dbup-for-relational-data.md" />
+    <File Path="architecture/adr/0008-dedicated-migrator-forward-only.md" />
+    <File Path="architecture/adr/0009-expand-contract-database-changes.md" />
+    <File Path="architecture/adr/0010-event-and-message-versioning.md" />
+    <File Path="architecture/adr/0011-minimal-apis-dispatch-messages.md" />
+    <File Path="architecture/adr/0012-observability-opentelemetry-day-one.md" />
+    <File Path="architecture/adr/0013-local-development-aspire-and-compose.md" />
+    <File Path="architecture/adr/0014-external-integrations-ports-and-adapters.md" />
+    <File Path="architecture/adr/0015-architecture-tests-enforce-boundaries.md" />
+    <File Path="architecture/adr/0016-security-baseline.md" />
+    <File Path="architecture/adr/0017-order-lifecycle-process.md" />
+    <File Path="architecture/adr/0018-pricing-rule-pipeline.md" />
+    <File Path="architecture/adr/0019-feature-flags.md" />
+    <File Path="architecture/adr/0020-api-conventions-and-versioning.md" />
+    <File Path="architecture/adr/0021-deployment-and-ci-cd.md" />
+    <File Path="architecture/adr/0022-testing-strategy.md" />
+    <File Path="architecture/adr/README.md" />
+    <File Path="architecture/adr/template.md" />
+  </Folder>
+  <Folder Name="/deploy/">
+    <File Path="deploy/.env.example" />
+    <File Path="deploy/docker-compose.yml" />
+  </Folder>
+  <Folder Name="/deploy/keycloak/">
+    <File Path="deploy/keycloak/orderplatform-realm.json" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".dockerignore" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+  </Folder>
+  <Folder Name="/spikes/">
+    <File Path="spikes/.gitignore" />
+    <File Path="spikes/Directory.Build.props" />
+    <File Path="spikes/Directory.Packages.props" />
+  </Folder>
+  <Folder Name="/spikes/S1.Durability/">
+    <File Path="spikes/S1.Durability/appsettings.Development.json" />
+    <File Path="spikes/S1.Durability/appsettings.json" />
+    <File Path="spikes/S1.Durability/Program.cs" />
+    <File Path="spikes/S1.Durability/S1.Durability.csproj" />
+  </Folder>
+  <Folder Name="/spikes/S1.Durability/Internal/" />
+  <Folder Name="/spikes/S1.Durability/Internal/Generated/" />
+  <Folder Name="/spikes/S1.Durability/Internal/Generated/WolverineHandlers/">
+    <File Path="spikes/S1.Durability/Internal/Generated/WolverineHandlers/DapperWorkHandler175372187.cs" />
+    <File Path="spikes/S1.Durability/Internal/Generated/WolverineHandlers/FlakyWorkHandler770243074.cs" />
+    <File Path="spikes/S1.Durability/Internal/Generated/WolverineHandlers/GeneratedHandlerRegistry.cs" />
+    <File Path="spikes/S1.Durability/Internal/Generated/WolverineHandlers/ScheduledWorkHandler1569026308.cs" />
+    <File Path="spikes/S1.Durability/Internal/Generated/WolverineHandlers/SlowWorkHandler158482942.cs" />
+  </Folder>
+  <Folder Name="/spikes/S1.Durability/Properties/">
+    <File Path="spikes/S1.Durability/Properties/launchSettings.json" />
+  </Folder>
+  <Folder Name="/spikes/S1.Durability/scripts/">
+    <File Path="spikes/S1.Durability/scripts/s1-crash.ps1" />
+    <File Path="spikes/S1.Durability/scripts/s2-s7.ps1" />
+    <File Path="spikes/S1.Durability/scripts/s4.sh" />
+  </Folder>
+  <Folder Name="/spikes/S3.UnknownEvents/">
+    <File Path="spikes/S3.UnknownEvents/s3.cs" />
+  </Folder>
+  <Folder Name="/spikes/S6.OnlineDdl/">
+    <File Path="spikes/S6.OnlineDdl/dbup.cs" />
+    <File Path="spikes/S6.OnlineDdl/s6.sh" />
+  </Folder>
   <Folder Name="/src/" />
   <Folder Name="/src/AppHost/">
     <Project Path="src/AppHost/OrderPlatform.AppHost/OrderPlatform.AppHost.csproj" />
@@ -55,12 +137,12 @@
   <Folder Name="/tests/">
     <Project Path="tests/Billing.Infrastructure.Tests/Billing.Infrastructure.Tests.csproj" />
     <Project Path="tests/Inventory.Infrastructure.Tests/Inventory.Infrastructure.Tests.csproj" />
+    <Project Path="tests/Ordering.Domain.Tests/Ordering.Domain.Tests.csproj" />
     <Project Path="tests/OrderPlatform.Api.IntegrationTests/OrderPlatform.Api.IntegrationTests.csproj" />
     <Project Path="tests/OrderPlatform.AppHost.Tests/OrderPlatform.AppHost.Tests.csproj" />
     <Project Path="tests/OrderPlatform.Architecture.Tests/OrderPlatform.Architecture.Tests.csproj" />
     <Project Path="tests/OrderPlatform.Migrations.Tests/OrderPlatform.Migrations.Tests.csproj" />
     <Project Path="tests/OrderPlatform.Testing/OrderPlatform.Testing.csproj" />
-    <Project Path="tests/Ordering.Domain.Tests/Ordering.Domain.Tests.csproj" />
     <Project Path="tests/Pricing.Domain.Tests/Pricing.Domain.Tests.csproj" />
     <Project Path="tests/Shipping.Infrastructure.Tests/Shipping.Infrastructure.Tests.csproj" />
   </Folder>

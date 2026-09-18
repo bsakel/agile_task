@@ -1,6 +1,6 @@
 # ADR-0006: Marten event sourcing for Ordering
 
-- **Status:** Accepted
+- **Status:** Accepted — see the implementation notes below
 - **Date:** 2026-09-17
 
 ## Context
@@ -26,6 +26,25 @@ We will implement the Ordering module with **event sourcing on Marten** (Postgre
 |---|---|
 | State-based persistence + status history table | History becomes a secondary, easily inconsistent record |
 | Dedicated event store (EventStoreDB/KurrentDB) | Another database to operate; Marten keeps everything in PostgreSQL with transactional outbox integration |
+
+## Implementation (PRs 2f, 2g, 2i)
+
+Marten 9 dispatches conventional `Apply` methods through a **compile-time source generator that must run in the assembly
+declaring the type it generates for**. That collides with ADR-0003: `Ordering.Domain` is deliberately free of
+frameworks, and the architecture tests enforce it. The consequences are worth knowing before the next aggregate:
+
+- **Streams are folded by hand.** `AggregateStreamAsync<Order>` fails at runtime (`InvalidProjectionException`), so
+  `OrderStream.LoadAsync` in `Ordering.Application` dispatches the stored events with an explicit `switch` and throws on
+  one it does not know. **Every new lifecycle event needs a case there**, or loading an order that has one fails.
+- **Marten-backed types live where Marten is referenced.** The `OrderDetails` read model is in `Ordering.Application`,
+  not in the domain (no generator) and not in `Ordering.Infrastructure` (the query handlers may not depend on it).
+- **An inline snapshot silently ignores an event it has no `Apply` for**, which would freeze the read model at a stale
+  status with nothing failing. `ProjectionCoverageTests` therefore fails the build when a stored event has no `Apply` on
+  `OrderDetails` — the same treatment spike S4 earned for unregistered documents.
+- Neither problem was visible to the architecture tests or to a trace: PR 2i's tracing test passed while the flow was
+  broken. Only a test that asserted the resulting **state** caught it.
+
+ADR-0004 records the matching constraint for Wolverine's generated code.
 
 ## Consequences
 

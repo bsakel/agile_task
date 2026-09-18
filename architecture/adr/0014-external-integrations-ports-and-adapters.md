@@ -67,6 +67,23 @@ signature-verified, stored raw, and converted into messages.
   success, each error mapping, timeouts, and the outcome query after timeout.
 - Fakes are used only for module and integration tests; they are kept simple and are not the proof that an adapter works.
 
+## Implementation (PRs 2h, 3a, 3b, 3c)
+
+- **⚠️ A resilience pipeline takes `TimeProvider` from the container.** ADR-0022 replaces `TimeProvider` with
+  `FakeTimeProvider` in time-dependent tests, and a frozen clock means the per-attempt timeout, the retry delay and the
+  circuit-breaker window **never elapse** — the adapter silently stops timing out and a test hangs. The billing HTTP
+  adapter therefore pins its pipeline to `TimeProvider.System`. This applies to every future typed client: the
+  business clock and the resilience clock are not the same clock.
+- **Which failures are retryable had to be decided.** "Transient" was not specific enough: `408`, `429` and `5xx` map to
+  `billing-provider-unavailable` (retry), every other `4xx` to `billing-provider-rejected` (a conflict, not an outage) —
+  without that split a rejected call would be retried as if the provider were down. The provider contract the adapter
+  was written against is documented next to it in `Billing.Infrastructure/Http/README.md`.
+- **An unknown outcome after a timeout stays unknown.** When the outcome query does not know our idempotency key, the
+  adapter reports the provider as unavailable so the same key is sent again, which is safe precisely because the call
+  never took effect.
+- **A fake is per process.** `Integrations:*:Mode=Fake` registers an in-memory adapter, so each host has its own state.
+  That is invisible in production (one external system) but matters in tests — see ADR-0022.
+
 ## Consequences
 
 - Positive: providers swappable; domain testable without network; failures contained; no retry storms; fakes cannot

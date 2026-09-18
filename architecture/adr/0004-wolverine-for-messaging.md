@@ -1,6 +1,6 @@
 # ADR-0004: Wolverine for messaging and mediation
 
-- **Status:** Accepted
+- **Status:** Accepted — see the implementation notes below
 - **Date:** 2026-09-17
 
 ## Context
@@ -44,6 +44,25 @@ Handlers are plain classes with no framework base types, which keeps the applica
 | MediatR | Commercial licence; mediation only — outbox, retries and transports must be built or added separately |
 | MassTransit | Strong, but its latest major versions also moved to a commercial licence; heavier broker-first model |
 | Hand-rolled dispatcher | Cheap for mediation, but durability, retries and outbox are exactly the hard parts |
+
+## Implementation (PR 2f)
+
+Wolverine generates handler code **into the host assembly** and, since version 6, refuses service location in it by
+default. Generated code therefore has to be able to construct a handler's dependencies itself, which constrains how
+modules register their services:
+
+- **A service a handler depends on must be `public`.** The Dapper adapters were `internal`; generated code in the host
+  assembly cannot see them. They are public now — the module boundary is enforced by the architecture tests, not by CLR
+  visibility.
+- **Register by type, not as a pre-built instance.** The pricing rules were registered as instances, which generated
+  code cannot construct; they are registered by type, keeping the order ADR-0018 pins.
+- **A genuinely opaque registration is opted in explicitly.** Aspire registers `NpgsqlDataSource` through a factory, so
+  the composition root calls `CodeGeneration.AlwaysUseServiceLocationFor<NpgsqlDataSource>()` — the escape hatch
+  Wolverine documents for exactly this case, and the only one in the solution.
+
+The failure mode is a startup exception (`InvalidServiceLocationException`) naming the handler, not a compile error, so
+it appears the first time the handler graph is built — in the architecture tests or at startup. ADR-0006 records the
+matching constraint for Marten's generated code.
 
 ## Consequences
 

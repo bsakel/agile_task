@@ -10,9 +10,9 @@ Statuses: `Proposed` (open for discussion) · `Accepted` · `Superseded by ADR-x
 | [0001](0001-record-architecture-decisions.md) | Record architecture decisions | Accepted |
 | [0002](0002-modular-monolith.md) | Modular monolith | Accepted |
 | [0003](0003-module-structure-and-communication.md) | Module structure and communication | Accepted |
-| [0004](0004-wolverine-for-messaging.md) | Wolverine for messaging and mediation | Accepted |
-| [0005](0005-durable-in-process-messaging.md) | Durable in-process messaging, broker deferred | Accepted (pending spike S1/S2) |
-| [0006](0006-marten-event-sourcing-for-ordering.md) | Marten event sourcing for Ordering | Accepted |
+| [0004](0004-wolverine-for-messaging.md) | Wolverine for messaging and mediation | Accepted — implementation note on generated handler code |
+| [0005](0005-durable-in-process-messaging.md) | Durable in-process messaging, broker deferred | Accepted — verified by spikes S1 and S2 |
+| [0006](0006-marten-event-sourcing-for-ordering.md) | Marten event sourcing for Ordering | Accepted — implementation note on the source-generated dispatcher |
 | [0007](0007-dapper-and-dbup-for-relational-data.md) | Dapper and DbUp for relational data | Accepted |
 | [0008](0008-dedicated-migrator-forward-only.md) | Dedicated migrator, forward-only migrations | Accepted |
 | [0009](0009-expand-contract-database-changes.md) | Expand/contract database changes | Accepted |
@@ -20,14 +20,14 @@ Statuses: `Proposed` (open for discussion) · `Accepted` · `Superseded by ADR-x
 | [0011](0011-minimal-apis-dispatch-messages.md) | Minimal APIs dispatch messages | Accepted |
 | [0012](0012-observability-opentelemetry-day-one.md) | Observability with OpenTelemetry from day one | Accepted |
 | [0013](0013-local-development-aspire-and-compose.md) | Local development with Aspire and docker-compose | Accepted |
-| [0014](0014-external-integrations-ports-and-adapters.md) | External integrations via ports, adapters and resilience | Accepted |
+| [0014](0014-external-integrations-ports-and-adapters.md) | External integrations via ports, adapters and resilience | Accepted — implementation notes from the adapters |
 | [0015](0015-architecture-tests-enforce-boundaries.md) | Architecture tests enforce boundaries | Accepted |
 | [0016](0016-security-baseline.md) | Security baseline | Accepted |
-| [0017](0017-order-lifecycle-process.md) | Order lifecycle as an event-sourced process | Accepted |
-| [0018](0018-pricing-rule-pipeline.md) | Pricing as a rule pipeline | Accepted |
+| [0017](0017-order-lifecycle-process.md) | Order lifecycle as an event-sourced process | Accepted — **one open issue** (§2a: leaving `RequiresAttention`) |
+| [0018](0018-pricing-rule-pipeline.md) | Pricing as a rule pipeline | Accepted — implementation note (PR 2c) |
 | [0019](0019-feature-flags.md) | Feature flags (v1 Microsoft.FeatureManagement, target OpenFeature) | Accepted |
 | [0020](0020-api-conventions-and-versioning.md) | HTTP API conventions, versioning and idempotency | Accepted |
 | [0021](0021-deployment-and-ci-cd.md) | Deployment and CI/CD | Accepted |
-| [0022](0022-testing-strategy.md) | Testing strategy | Accepted |
+| [0022](0022-testing-strategy.md) | Testing strategy | Accepted — implementation notes from Phases 2 and 3 |
 
 Template for new records: [template.md](template.md).

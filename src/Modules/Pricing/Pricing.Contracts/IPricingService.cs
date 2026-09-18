@@ -41,7 +41,15 @@ public sealed record PriceBreakdown(
     IReadOnlyDictionary<string, bool> FlagDecisions);
 
 /// <summary>One line of the breakdown, already rounded. <paramref name="Sku"/> is set for product lines only.</summary>
-public sealed record PriceLine(PriceLineKind Kind, string Description, Money Amount, string? Sku);
+public sealed record PriceLine(PriceLineKind Kind, string Description, Money Amount, string? Sku)
+{
+    /// <summary>
+    /// The unit price the product line was priced at; <c>null</c> for discounts, charges and tax. Published because
+    /// <paramref name="Amount"/> is the rounded line total: dividing it back by the quantity would not give the price
+    /// the line was locked at (ADR-0018 rounding policy).
+    /// </summary>
+    public Money? UnitPrice { get; init; }
+}
 
 public enum PriceLineKind
 {

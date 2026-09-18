@@ -9,7 +9,7 @@ namespace OrderPlatform.Ordering.Domain.Tests.Builders;
 public sealed class OrderBuilder
 {
     public static readonly Guid OrderId = new("0f6b0d5e-0000-4000-8000-000000000001");
-    public const string AccountId = "acme";
+    public static readonly Guid AccountId = new("0f6b0d5e-0000-4000-8000-0000000000a1");
     public const string InvoiceId = "INV-2026-0001";
     public static readonly DateTimeOffset At = new(2026, 9, 17, 10, 0, 0, TimeSpan.Zero);
 

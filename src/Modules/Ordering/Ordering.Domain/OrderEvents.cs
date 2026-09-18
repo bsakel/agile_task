@@ -25,7 +25,7 @@ public enum OrderCancellationReason
 /// <summary>The order was accepted; the process starts by reserving inventory (ADR-0017 §3).</summary>
 public sealed record OrderSubmitted(
     Guid OrderId,
-    string AccountId,
+    Guid AccountId,
     int ProcessVersion,
     IReadOnlyList<OrderLine> Lines,
     OrderPricing Pricing,

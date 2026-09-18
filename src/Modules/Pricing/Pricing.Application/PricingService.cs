@@ -55,17 +55,25 @@ public sealed class PricingService(
             prices.Version,
             flagDecisions));
 
-        return ToContract(breakdown);
+        return ToContract(breakdown, prices.Prices);
     }
 
-    private static PriceBreakdown ToContract(Domain.PriceBreakdown breakdown) => new(
-        [.. breakdown.Lines.Select(line => new PriceLine(ToKind(line.Kind), line.Description, line.Amount, line.Sku))],
+    private static PriceBreakdown ToContract(
+        Domain.PriceBreakdown breakdown, IReadOnlyDictionary<string, SkuPrice> prices) => new(
+        [.. breakdown.Lines.Select(line => new PriceLine(ToKind(line.Kind), line.Description, line.Amount, line.Sku)
+        {
+            UnitPrice = UnitPriceOf(line, prices),
+        })],
         breakdown.Net,
         breakdown.Tax,
         breakdown.Total,
         breakdown.TaxTreatment == Domain.TaxTreatment.ReverseCharge,
         breakdown.PriceListVersion,
         breakdown.FlagDecisions);
+
+    /// <summary>The unit price behind a product line; other kinds have none.</summary>
+    private static Money? UnitPriceOf(Domain.PriceBreakdownLine line, IReadOnlyDictionary<string, SkuPrice> prices) =>
+        line.Sku is { } sku && prices.TryGetValue(sku, out var price) ? Money.InEur(price.UnitPrice) : null;
 
     private static PriceLineKind ToKind(Domain.PriceBreakdownLineKind kind) => kind switch
     {

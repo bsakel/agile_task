@@ -5,6 +5,7 @@ using Marten;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Npgsql;
 using OrderPlatform.BuildingBlocks.Infrastructure.Http.Idempotency;
 using OrderPlatform.BuildingBlocks.Infrastructure.Messaging;
 using OrderPlatform.Composition.Schema;
@@ -86,6 +87,10 @@ public static class PlatformCompositionExtensions
                 builder.Configuration["Wolverine:TypeLoadMode"], nameof(TypeLoadMode.Static), StringComparison.OrdinalIgnoreCase)
                 ? TypeLoadMode.Static
                 : TypeLoadMode.Dynamic;
+
+            // Handler code constructs a module's services inline; the data source is the one dependency it cannot, because
+            // Aspire registers it through a factory. Opting it in keeps service location out of everything else (ADR-0004).
+            options.CodeGeneration.AlwaysUseServiceLocationFor<NpgsqlDataSource>();
 
             options.ConfigureIdempotency(builder.Configuration);
 

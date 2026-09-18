@@ -7,7 +7,7 @@ Microsoft.Testing.Platform (`global.json`), assertions use Shouldly.
 |---|---|---|
 | `OrderPlatform.Architecture.Tests` | Module boundaries and layering (ArchUnitNET and `ProjectReference` rules), handler coverage and naming, explicit Marten document and event registration, pinned stored message/event names (`contract-names.approved.txt`) — ADR-0015 | Nothing |
 | `OrderPlatform.Migrations.Tests` | Expand/contract and online-safety rules for every DbUp script and for the generated Marten patch — ADR-0009 | Nothing |
-| `OrderPlatform.Api.IntegrationTests` | Acceptance criteria of PRs 1a and 1b: Migrator, startup guards, authentication, idempotency, problem details, feature flags, OTLP traces; a module's seeded data read through its contracts against the Migrator-built schema (PRs 2b, 2c) | Docker |
+| `OrderPlatform.Api.IntegrationTests` | Acceptance criteria of PRs 1a and 1b: Migrator, startup guards, authentication, idempotency, problem details, feature flags, OTLP traces; a module's seeded data read through its contracts against the Migrator-built schema (PRs 2b, 2c); submitting an order end to end (PR 2f) | Docker |
 | `OrderPlatform.AppHost.Tests` | The Aspire AppHost runs the Migrator to completion before the Api is ready | Docker, free port 8080 |
 | `Billing.Infrastructure.Tests` | Billing adapters: the fake provider's payment states, idempotency keys, outcome query and outage; the HTTP adapter against WireMock.Net — success, every error mapping, unknown status, timeout followed by the outcome query, open circuit — ADR-0014 | Nothing |
 | `Inventory.Infrastructure.Tests` | The fake inventory adapter behind `IInventoryGateway`: all-or-nothing reservation, idempotency keys, release, configured failures — ADR-0014 | Nothing |

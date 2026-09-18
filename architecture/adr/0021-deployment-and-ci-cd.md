@@ -50,7 +50,7 @@ The reference implementation is a GitHub Actions workflow; the stages are tool-a
 #### Implementation (PR 1c)
 
 - `.github/workflows/pull-request.yml` runs three parallel jobs:
-  - **build and test**: build, vulnerable packages, architecture, migration, integration and AppHost tests;
+  - **build and test**: build, vulnerable packages, module unit tests, architecture, migration, integration and AppHost tests;
   - **release compatibility** (`.github/scripts/release-compatibility.sh`);
   - **compose smoke test** (`.github/scripts/compose-smoke.sh`).
 - **Previous release** = the latest `v*` tag. Until the first release, the merge base with `main` (on `main` itself, the

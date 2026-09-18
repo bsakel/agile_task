@@ -10,4 +10,7 @@ event order_cancelled <- OrderPlatform.Ordering.Domain.OrderCancelled
 event order_submitted <- OrderPlatform.Ordering.Domain.OrderSubmitted
 message OrderPlatform.Api.Diagnostics.EchoDiagnostics <- OrderPlatform.Api.Diagnostics.EchoDiagnostics
 message OrderPlatform.BuildingBlocks.Infrastructure.Http.Idempotency.CleanUpIdempotencyRecords <- OrderPlatform.BuildingBlocks.Infrastructure.Http.Idempotency.CleanUpIdempotencyRecords
+message OrderPlatform.Inventory.Contracts.InventoryReserved <- OrderPlatform.Inventory.Contracts.InventoryReserved
+message OrderPlatform.Inventory.Contracts.InventoryUnavailable <- OrderPlatform.Inventory.Contracts.InventoryUnavailable
+message OrderPlatform.Inventory.Contracts.ReserveInventory <- OrderPlatform.Inventory.Contracts.ReserveInventory
 message OrderPlatform.Ordering.Application.SubmitOrder <- OrderPlatform.Ordering.Application.SubmitOrder

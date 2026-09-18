@@ -35,7 +35,7 @@ public sealed record OrderSubmitted(
     DateTimeOffset SubmittedAt) : IDomainEvent;
 
 /// <summary>All lines were reserved in the external inventory system.</summary>
-public sealed record InventoryReserved(Guid OrderId, Guid ReservationId, DateTimeOffset ReservedAt) : IDomainEvent;
+public sealed record InventoryReserved(Guid OrderId, string ReservationKey, DateTimeOffset ReservedAt) : IDomainEvent;
 
 /// <summary>The reservation failed; the customer is asked to reduce the order (all-or-nothing, README §2).</summary>
 public sealed record InventoryUnavailable(Guid OrderId, IReadOnlyList<string> UnavailableSkus, DateTimeOffset ReportedAt) : IDomainEvent;

@@ -160,13 +160,13 @@ public sealed class OrderTransitionTests
     public void A_reserved_order_keeps_the_reservation_and_asks_billing_to_issue_the_invoice()
     {
         var order = new OrderBuilder().InState(OrderStatus.ValidatingInventory).Build();
-        var reservationId = Guid.NewGuid();
+        var reservationKey = OrderBuilder.ReservationKey;
 
-        var decision = order.ReservationSucceeded(reservationId, OrderBuilder.At);
+        var decision = order.ReservationSucceeded(reservationKey, OrderBuilder.At);
         OrderBuilder.Apply(order, decision.Events);
 
         decision.FollowUps.ShouldBe([OrderFollowUp.IssueInvoice]);
-        order.ReservationId.ShouldBe(reservationId);
+        order.ReservationKey.ShouldBe(reservationKey);
     }
 
     [Fact]
@@ -187,7 +187,7 @@ public sealed class OrderTransitionTests
     {
         var order = new OrderBuilder().InState(OrderStatus.Cancelled).Build();
 
-        var decision = order.ReservationSucceeded(Guid.NewGuid(), OrderBuilder.At);
+        var decision = order.ReservationSucceeded(OrderBuilder.ReservationKey, OrderBuilder.At);
 
         decision.Events.ShouldBeEmpty();
         decision.FollowUps.ShouldBe([OrderFollowUp.ReleaseInventory]);
@@ -273,7 +273,7 @@ public sealed class OrderTransitionTests
 
     private static OrderDecision Act(Order order, Trigger trigger) => trigger switch
     {
-        Trigger.ReservationSucceeded => order.ReservationSucceeded(Guid.NewGuid(), OrderBuilder.At),
+        Trigger.ReservationSucceeded => order.ReservationSucceeded(OrderBuilder.ReservationKey, OrderBuilder.At),
         Trigger.ReservationFailed => order.ReservationFailed(["SKU-1"], OrderBuilder.At),
         Trigger.InvoicingSucceeded => order.InvoicingSucceeded(
             OrderBuilder.InvoiceId,

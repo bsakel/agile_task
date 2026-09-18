@@ -7,8 +7,12 @@
     <!-- The account and its ids, and the price the order is locked at (ADR-0003, ADR-0017 §3). -->
     <ProjectReference Include="..\..\Customers\Customers.Contracts\Customers.Contracts.csproj" />
     <ProjectReference Include="..\..\Pricing\Pricing.Contracts\Pricing.Contracts.csproj" />
+    <!-- The reservation step: the command Ordering sends and the outcomes it handles (ADR-0003, ADR-0017 §3). -->
+    <ProjectReference Include="..\..\Inventory\Inventory.Contracts\Inventory.Contracts.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Marten" />
+    <!-- Sending the follow-up through the outbox in the handler's transaction (ADR-0005). -->
+    <PackageReference Include="WolverineFx" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Unit tests for the fake shipping adapter (ADR-0014, ADR-0022 adapter level). No Docker needed. -->
+  <PropertyGroup>
+    <!-- Module test projects are named <Module>.<Layer>.Tests; assemblies and namespaces get the platform prefix. -->
+    <AssemblyName>OrderPlatform.$(MSBuildProjectName)</AssemblyName>
+    <RootNamespace>OrderPlatform.$(MSBuildProjectName)</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Modules\Shipping\Shipping.Infrastructure\Shipping.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

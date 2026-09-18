@@ -13,4 +13,6 @@ message OrderPlatform.BuildingBlocks.Infrastructure.Http.Idempotency.CleanUpIdem
 message OrderPlatform.Inventory.Contracts.InventoryReserved <- OrderPlatform.Inventory.Contracts.InventoryReserved
 message OrderPlatform.Inventory.Contracts.InventoryUnavailable <- OrderPlatform.Inventory.Contracts.InventoryUnavailable
 message OrderPlatform.Inventory.Contracts.ReserveInventory <- OrderPlatform.Inventory.Contracts.ReserveInventory
+message OrderPlatform.Ordering.Application.GetOrder <- OrderPlatform.Ordering.Application.GetOrder
+message OrderPlatform.Ordering.Application.GetOrderHistory <- OrderPlatform.Ordering.Application.GetOrderHistory
 message OrderPlatform.Ordering.Application.SubmitOrder <- OrderPlatform.Ordering.Application.SubmitOrder

@@ -9,7 +9,7 @@ namespace OrderPlatform.Ordering.Application;
 /// </summary>
 /// <remarks>
 /// Every stored event needs an <c>Apply</c> here or the projection silently stops following the order, so
-/// <c>OrderDetailsProjectionTests</c> fails the build when a registered event has none.
+/// <c>ProjectionCoverageTests</c> fails the build when a stored event has none.
 /// </remarks>
 public sealed class OrderDetails
 {
@@ -25,6 +25,9 @@ public sealed class OrderDetails
 
     /// <summary>Set once inventory confirmed the reservation; the handle it is released with (ADR-0017 §7).</summary>
     public string? ReservationKey { get; set; }
+
+    /// <summary>Set once the carrier took the shipment, so a customer can follow it (ADR-0017 §2).</summary>
+    public string? TrackingReference { get; set; }
 
     public string? InvoiceId { get; set; }
 
@@ -90,5 +93,58 @@ public sealed class OrderDetails
     {
         Status = OrderStatus.Cancelled;
         UpdatedAt = @event.CancelledAt;
+    }
+
+    /// <summary>The customer removed what could not be supplied, so the order is priced again (ADR-0018).</summary>
+    public void Apply(OrderItemsReduced @event)
+    {
+        Lines = @event.Lines;
+        Pricing = @event.Pricing;
+        Status = OrderStatus.ValidatingInventory;
+        UpdatedAt = @event.ReducedAt;
+    }
+
+    public void Apply(FulfilmentFailed @event)
+    {
+        Status = OrderStatus.FulfilmentOnHold;
+        UpdatedAt = @event.ReportedAt;
+    }
+
+    public void Apply(FulfilmentInformationUpdated @event)
+    {
+        Status = OrderStatus.Processing;
+        UpdatedAt = @event.UpdatedAt;
+    }
+
+    public void Apply(ShipmentDispatched @event)
+    {
+        TrackingReference = @event.TrackingReference;
+        Status = OrderStatus.Shipped;
+        UpdatedAt = @event.DispatchedAt;
+    }
+
+    public void Apply(ShipmentDelivered @event)
+    {
+        Status = OrderStatus.Delivered;
+        UpdatedAt = @event.DeliveredAt;
+    }
+
+    /// <summary>Being unwound, but not cancelled until billing confirms the refund (ADR-0017 §5).</summary>
+    public void Apply(RefundRequested @event)
+    {
+        Status = OrderStatus.Refunding;
+        UpdatedAt = @event.RequestedAt;
+    }
+
+    public void Apply(RefundCompleted @event)
+    {
+        Status = OrderStatus.Cancelled;
+        UpdatedAt = @event.CompletedAt;
+    }
+
+    public void Apply(AttentionResolved @event)
+    {
+        Status = OrderStatus.Cancelled;
+        UpdatedAt = @event.ResolvedAt;
     }
 }

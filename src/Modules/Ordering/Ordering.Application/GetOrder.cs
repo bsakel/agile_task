@@ -25,6 +25,7 @@ public sealed record OrderView(
     IReadOnlyList<OrderLineView> Lines,
     OrderPricingView Pricing,
     string? InvoiceId,
+    string? TrackingReference,
     DateTimeOffset? PaymentDueAt,
     DateTimeOffset SubmittedAt,
     DateTimeOffset UpdatedAt);

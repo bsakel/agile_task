@@ -55,6 +55,7 @@ internal sealed record OrderResponse(
     IReadOnlyList<OrderLineResponse> Lines,
     OrderPricingResponse Pricing,
     string? InvoiceId,
+    string? TrackingReference,
     DateTimeOffset? PaymentDueAt,
     DateTimeOffset SubmittedAt,
     DateTimeOffset UpdatedAt);

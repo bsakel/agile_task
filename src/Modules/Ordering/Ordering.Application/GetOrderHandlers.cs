@@ -27,6 +27,7 @@ public static class GetOrderHandler
                 details.Pricing.PriceListVersion,
                 details.Pricing.ReverseCharge),
             details.InvoiceId,
+            details.TrackingReference,
             details.PaymentDueAt,
             details.SubmittedAt,
             details.UpdatedAt);

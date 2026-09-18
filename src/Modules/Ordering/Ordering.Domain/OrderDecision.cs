@@ -10,6 +10,10 @@ public enum OrderFollowUp
     ReleaseInventory = 2,
     IssueInvoice = 3,
     VoidInvoice = 4,
+    RefundInvoice = 5,
+    CancelShipmentRequest = 6,
+    RequestShipment = 7,
+    CheckInvoiceStatus = 8,
 }
 
 /// <summary>

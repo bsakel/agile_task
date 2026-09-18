@@ -4,13 +4,14 @@ namespace OrderPlatform.Ordering.Domain.Tests.Builders;
 
 /// <summary>
 /// Builds an order in a given state by replaying the events that lead there, which is how the handlers load it
-/// (tests/README conventions). States that no PR can reach yet (fulfilment and refunding, PR 2e) are rejected.
+/// (tests/README conventions). Every state of ADR-0017 §2 has an event path, so the transition table covers them all.
 /// </summary>
 public sealed class OrderBuilder
 {
     public static readonly Guid OrderId = new("0f6b0d5e-0000-4000-8000-000000000001");
     public static readonly Guid AccountId = new("0f6b0d5e-0000-4000-8000-0000000000a1");
     public const string InvoiceId = "INV-2026-0001";
+    public const string TrackingReference = "TRK-2026-0001";
     public static readonly DateTimeOffset At = new(2026, 9, 17, 10, 0, 0, TimeSpan.Zero);
 
     /// <summary>Invoices are due three calendar days after they are issued (ADR-0017 §2).</summary>
@@ -47,7 +48,19 @@ public sealed class OrderBuilder
                 events.AddRange([Reserved(), Issued()]);
                 break;
             case OrderStatus.Processing:
-                events.AddRange([Reserved(), Issued(), new InvoicePaid(OrderId, InvoiceId, At)]);
+                events.AddRange(Paid());
+                break;
+            case OrderStatus.FulfilmentOnHold:
+                events.AddRange([.. Paid(), Held()]);
+                break;
+            case OrderStatus.Refunding:
+                events.AddRange([.. Paid(), Held(), new RefundRequested(OrderId, OrderCancellationReason.CustomerRequest, null, At)]);
+                break;
+            case OrderStatus.Shipped:
+                events.AddRange([.. Paid(), Dispatched()]);
+                break;
+            case OrderStatus.Delivered:
+                events.AddRange([.. Paid(), Dispatched(), new ShipmentDelivered(OrderId, At)]);
                 break;
             case OrderStatus.RequiresAttention:
                 events.AddRange(
@@ -62,7 +75,7 @@ public sealed class OrderBuilder
                 events.Add(new OrderCancelled(OrderId, OrderCancellationReason.CustomerRequest, null, At));
                 break;
             default:
-                throw new NotSupportedException($"No event path reaches {status} yet; it arrives with PR 2e.");
+                throw new NotSupportedException($"No event path reaches {status}.");
         }
 
         return this;
@@ -96,13 +109,28 @@ public sealed class OrderBuilder
                 case InvoicePaid e: order.Apply(e); break;
                 case InvoicePartiallyPaid e: order.Apply(e); break;
                 case AttentionRequired e: order.Apply(e); break;
+                case AttentionResolved e: order.Apply(e); break;
                 case OrderCancelled e: order.Apply(e); break;
-                default: throw new NotSupportedException($"{@event.GetType().Name} has no Apply in this PR.");
+                case OrderItemsReduced e: order.Apply(e); break;
+                case FulfilmentFailed e: order.Apply(e); break;
+                case FulfilmentInformationUpdated e: order.Apply(e); break;
+                case ShipmentDispatched e: order.Apply(e); break;
+                case ShipmentDelivered e: order.Apply(e); break;
+                case RefundRequested e: order.Apply(e); break;
+                case RefundCompleted e: order.Apply(e); break;
+                default: throw new NotSupportedException($"{@event.GetType().Name} has no Apply.");
             }
         }
     }
 
     private static InventoryReserved Reserved() => new(OrderId, Guid.NewGuid(), At);
+
+    /// <summary>The whole way to Processing: reserved, invoiced and paid in full.</summary>
+    private static object[] Paid() => [Reserved(), Issued(), new InvoicePaid(OrderId, InvoiceId, At)];
+
+    private static FulfilmentFailed Held() => new(OrderId, "The delivery address is incomplete.", At);
+
+    private static ShipmentDispatched Dispatched() => new(OrderId, TrackingReference, At);
 
     private static InvoiceIssued Issued() => new(OrderId, InvoiceId, InvoiceAmount, DueAt, At);
 

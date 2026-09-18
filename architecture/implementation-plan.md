@@ -1,8 +1,12 @@
 # Implementation Plan
 
-Status: **Agreed** — all ADRs accepted. **Phase 0 completed** ([results](phase-0-results.md)); plan and ADRs updated
-with its findings. **Phase 1 completed** (PRs 1a, 1b, 1c merged). Phases 2–4 re-planned as small PRs limited to the
-assessment scope; the remaining work is split into [next steps](#next-steps-for-the-delivery-team). Next: Phase 2.
+Status: **Delivered** — all ADRs accepted and every planned PR merged. **Phase 0** ([results](phase-0-results.md)) fixed
+the design; **Phase 1** built the foundation (1a, 1b, 1c); **Phase 2** the Ordering slice and the complete order state
+machine (2a–2j, eleven PRs); **Phase 3** the integration ports and the billing HTTP adapter (3a, 3b, 3c); **Phase 4**
+this handover pass (4a). Everything beyond the assessment scope is ordered in
+[next steps](#next-steps-for-the-delivery-team) N1–N16 and the [backlog](#follow-up-backlog-for-the-delivery-team-out-of-assessment-scope).
+
+**Read first:** the [open questions](#open-questions) — one decision is needed before next step N3.
 
 ## Guiding principles
 
@@ -68,6 +72,8 @@ Short, throwaway experiments ([`spikes/`](../spikes)). **Status: completed** —
 | Testcontainers.PostgreSql, .Keycloak | 4.15.0 |
 
 ### Phase 1 — Foundation (no business logic)
+
+**Status: delivered** — PRs 1a, 1b and 1c merged (#2, #3, #4); CI deployment stages remain stubbed (ADR-0021).
 
 Phase 1 is delivered as **three pull requests**, reviewed manually and merged in order (see
 [Delivery workflow](#delivery-workflow)). Each PR branches from `main` after the previous one is merged. CI only exists
@@ -210,7 +216,7 @@ Dependency order (PRs on the same line can be open at the same time):
 
 ### Phase 2 — Reference vertical slice: Ordering
 
-Eleven PRs. The slice ends when an order is reserved and waits in `Invoicing` (invoicing is a next step), or is cancelled.
+**Status: delivered** — all eleven PRs merged: 2a #6, 2b #7, 2c #14, 2d #8, 2d-2 #13, 2e #18, 2f #16, 2g #19, 2h #9, 2i #17, 2j #20. The slice ends when an order is reserved and waits in `Invoicing` (invoicing is a next step), or is cancelled.
 
 | PR | Branch | Scope | Acceptance criteria (automated tests) | Size | Depends on |
 |---|---|---|---|---|---|
@@ -240,7 +246,7 @@ Phase acceptance criteria:
 
 ### Phase 3 — Integration ports and a reference adapter
 
-Three PRs. Payment and shipping integration is shown through ports and fakes, and one real-shaped HTTP adapter shows the
+**Status: delivered** — all three PRs merged: 3a #11, 3b #10, 3c #15. Payment and shipping integration is shown through ports and fakes, and one real-shaped HTTP adapter shows the
 full ADR-0014 pattern. Handlers, timers, retry queues and durability tests are next steps N3–N14.
 
 | PR | Branch | Scope | Acceptance criteria (automated tests) | Size | Depends on |
@@ -254,6 +260,8 @@ Phase acceptance criteria:
 - The billing HTTP adapter proves success, error mapping and timeout followed by an outcome query against WireMock.Net (3c).
 
 ### Phase 4 — Handover documentation
+
+**Status: delivered** — PR 4a.
 
 | PR | Branch | Scope | Acceptance criteria | Size | Depends on |
 |---|---|---|---|---|---|
@@ -326,8 +334,16 @@ estimates). Beyond the timebox, a delivery team works through the next steps bef
 
 ## Open questions
 
-None blocking. Business assumptions are recorded in [README §2](README.md#2-domain-scope-a-b2b-ordering-platform) and
-should be validated with the business before the invoicing and fulfilment next steps (N3 onwards).
+**⚠️ One open question needs a decision before N3: how an order leaves `RequiresAttention`.** In v1 a support agent
+resolves it by cancelling the order with a mandatory reason, and settles the money outside the system. ADR-0017 §6 also
+mentions reinstatement, which has no target state and means something different for each of the three reasons an order
+lands there. The question, the options per reason and what a decision has to cover are in
+[ADR-0017 §2a](adr/0017-order-lifecycle-process.md). It
+belongs with the back-office tooling of N12, and the invoicing and payment steps (N3–N6) are what start producing these
+orders in volume — so decide it before building them, not after.
+
+Business assumptions are recorded in [README §2](README.md#2-domain-scope-a-b2b-ordering-platform) and should be
+validated with the business before the invoicing and fulfilment next steps (N3 onwards).
 
 Resolved: expand/contract sync mechanism is chosen per change in v1 (ADR-0009); enforcement test is part of Phase 1;
 feature flags start with Microsoft.FeatureManagement (ADR-0019); domain fixed as B2B with invoice payment and the
@@ -339,7 +355,16 @@ Phase 0 findings incorporated (see [phase-0-results](phase-0-results.md)).
 
 - Real adapters for inventory, billing and fulfilment/shipping systems (billing: complete the PR 3c reference adapter against the real provider contract).
 - Billing webhook (`POST /webhooks/billing`, signature validation) feeding `CheckInvoiceStatus`; shipping event webhooks.
-- Support tooling for `RequiresAttention` orders (queue, late-payment refund or reinstatement).
+- **Decide how an order leaves `RequiresAttention`** (ADR-0017 §2a) and build the support tooling for those orders: a
+  queue to work from, the refund that v1 settles outside the system, and reinstatement if the business wants it. The
+  decision comes first and is a revision of ADR-0017; the tooling is N12.
+- Fix the flaky test in `Billing.Infrastructure.Tests`: one failure in roughly five full runs, always on a cold start,
+  in the timing-sensitive HTTP adapter tests (timeout or circuit breaker). Seen twice, never reproduced in isolation;
+  the test name was not captured, so start by running that suite repeatedly from a clean build.
+- `ContractNamesTests` writes `contract-names.approved.received.txt` but its failure message names
+  `contract-names.received.txt`; make the two agree (ADR-0022).
+- Give the stream fold in `OrderStream.LoadAsync` the same build-time guard as the projection: today a lifecycle event
+  without a `case` fails loudly at runtime, but nothing catches it when the event is added (ADR-0006).
 - Returns after shipment, partial shipments, multi-currency, credit limits and configurable payment terms (out of scope per README §2).
 - Customer-facing order list projection and search.
 - RabbitMQ / Azure Service Bus transport when a second deployable appears.

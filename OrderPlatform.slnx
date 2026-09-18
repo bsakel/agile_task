@@ -54,6 +54,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Billing.Infrastructure.Tests/Billing.Infrastructure.Tests.csproj" />
+    <Project Path="tests/Inventory.Infrastructure.Tests/Inventory.Infrastructure.Tests.csproj" />
     <Project Path="tests/OrderPlatform.Api.IntegrationTests/OrderPlatform.Api.IntegrationTests.csproj" />
     <Project Path="tests/OrderPlatform.AppHost.Tests/OrderPlatform.AppHost.Tests.csproj" />
     <Project Path="tests/OrderPlatform.Architecture.Tests/OrderPlatform.Architecture.Tests.csproj" />

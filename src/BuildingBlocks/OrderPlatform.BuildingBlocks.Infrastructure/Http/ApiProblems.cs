@@ -29,16 +29,24 @@ public static class ApiProblems
             _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred."),
         };
 
-        return Problem(status, error.Code, title, error.Message);
+        return Problem(status, error.Code, title, error.Message, error.Details);
     }
 
-    public static ProblemHttpResult Problem(int status, string errorCode, string title, string? detail = null) =>
-        TypedResults.Problem(
-            statusCode: status,
-            type: TypeFor(errorCode),
-            title: title,
-            detail: detail,
-            extensions: new Dictionary<string, object?> { [ErrorCodeExtension] = errorCode });
+    public static ProblemHttpResult Problem(
+        int status,
+        string errorCode,
+        string title,
+        string? detail = null,
+        IReadOnlyDictionary<string, object?>? details = null)
+    {
+        // The failure's own fields first, so a module can never overwrite errorCode (ADR-0020).
+        var extensions = new Dictionary<string, object?>(details ?? new Dictionary<string, object?>(), StringComparer.Ordinal)
+        {
+            [ErrorCodeExtension] = errorCode,
+        };
+
+        return TypedResults.Problem(statusCode: status, type: TypeFor(errorCode), title: title, detail: detail, extensions: extensions);
+    }
 
     /// <summary>Field-level validation errors (<c>400</c>, error code <c>validation-failed</c>).</summary>
     public static ValidationProblem Validation(IDictionary<string, string[]> errors) =>

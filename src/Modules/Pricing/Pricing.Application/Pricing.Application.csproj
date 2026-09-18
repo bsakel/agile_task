@@ -3,5 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Pricing.Domain\Pricing.Domain.csproj" />
     <ProjectReference Include="..\Pricing.Contracts\Pricing.Contracts.csproj" />
+    <!-- The customer's tax profile, read through the Customers module's contract (ADR-0003, ADR-0018). -->
+    <ProjectReference Include="..\..\Customers\Customers.Contracts\Customers.Contracts.csproj" />
   </ItemGroup>
 </Project>

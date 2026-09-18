@@ -57,6 +57,20 @@ Pricing runs at submission and after every order edit. The resulting `PriceBreak
 version and flag decisions used, is stored on the event (`OrderSubmitted`, `OrderItemsReduced`). The invoice uses the
 latest recorded breakdown, so historic orders never change when price lists or rules change.
 
+### Implementation (PR 2c)
+
+- `Pricing.Contracts` carries **its own `PriceBreakdown`** (totals, lines, reverse-charge flag, price list version, flag
+  decisions), mapped from the domain breakdown by `PricingService`. A module's `Contracts` project may not reference its
+  `Domain` project (ADR-0003, enforced by the architecture tests), so the published breakdown is the contract shape of the
+  domain one rather than the domain type itself.
+- Schema `pricing`: `price_lists` (the base list has no `account_id`, a customer list has one) and `price_list_items`
+  (unit price and tax rate per SKU). No foreign key to `customers.accounts` — no module reads another module's schema
+  (ADR-0007). The **shipping charge is an attribute of the price list**, so a customer list can carry its own.
+- The recorded `PriceListVersion` names **every list that took part**, base list first, e.g. `base-2026-09+acme-2026-09`,
+  so the breakdown stays explainable when only one of the lists changes.
+- `Pricing.ShippingCharge` is evaluated **once per pricing run** by `PricingService` and recorded in the breakdown's flag
+  decisions; the rules read the recorded decision, never the flag (ADR-0019 rule 4).
+
 ## Consequences
 
 - Positive: new charges are a new rule class plus registration; each rule unit-testable in isolation; auditable

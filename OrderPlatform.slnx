@@ -1,4 +1,16 @@
 <Solution>
+  <Folder Name="/.github/">
+    <File Path=".github/branch-protection-main.json" />
+    <File Path=".github/pull_request_template.md" />
+  </Folder>
+  <Folder Name="/.github/scripts/">
+    <File Path=".github/scripts/compose-smoke.sh" />
+    <File Path=".github/scripts/release-compatibility.sh" />
+  </Folder>
+  <Folder Name="/.github/workflows/">
+    <File Path=".github/workflows/main.yml" />
+    <File Path=".github/workflows/pull-request.yml" />
+  </Folder>
   <Folder Name="/architecture/">
     <File Path="architecture/ai-usage.md" />
     <File Path="architecture/implementation-plan.md" />
@@ -45,6 +57,7 @@
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />
     <File Path="global.json" />
+    <File Path="README.md" />
   </Folder>
   <Folder Name="/spikes/">
     <File Path="spikes/.gitignore" />
@@ -94,7 +107,9 @@
     <Project Path="src/Host/OrderPlatform.Api/OrderPlatform.Api.csproj" />
     <Project Path="src/Host/OrderPlatform.Composition/OrderPlatform.Composition.csproj" />
   </Folder>
-  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/">
+    <File Path="src/Modules/Directory.Build.props" />
+  </Folder>
   <Folder Name="/src/Modules/Billing/">
     <Project Path="src/Modules/Billing/Billing.Application/Billing.Application.csproj" />
     <Project Path="src/Modules/Billing/Billing.Contracts/Billing.Contracts.csproj" />
@@ -135,6 +150,8 @@
     <Project Path="src/Tools/OrderPlatform.Migrator/OrderPlatform.Migrator.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <File Path="tests/Directory.Build.props" />
+    <File Path="tests/README.md" />
     <Project Path="tests/Billing.Infrastructure.Tests/Billing.Infrastructure.Tests.csproj" />
     <Project Path="tests/Inventory.Infrastructure.Tests/Inventory.Infrastructure.Tests.csproj" />
     <Project Path="tests/Ordering.Domain.Tests/Ordering.Domain.Tests.csproj" />

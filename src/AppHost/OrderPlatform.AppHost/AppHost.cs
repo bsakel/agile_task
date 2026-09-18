@@ -1,7 +1,11 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-// Same image major version and database name as docker-compose (ADR-0013).
-var postgres = builder.AddPostgres("postgres")
+// Same image major version, database name and development password as docker-compose (ADR-0013).
+// The password is a fixed parameter, not Aspire's generated one: PostgreSQL only applies POSTGRES_PASSWORD when it
+// initialises an empty data directory, so as soon as the generated password changes it no longer matches the data
+// volume below. The container then runs but never becomes healthy, and the Migrator and Api wait for it forever.
+var postgresPassword = builder.AddParameter("postgres-password", "orderplatform-dev", secret: true);
+var postgres = builder.AddPostgres("postgres", password: postgresPassword)
     .WithImageTag("17-alpine")
     .WithDataVolume("orderplatform-postgres");
 

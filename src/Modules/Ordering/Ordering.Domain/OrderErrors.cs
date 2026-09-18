@@ -5,12 +5,18 @@ namespace OrderPlatform.Ordering.Domain;
 /// <summary>Failures the Ordering module returns for commands it cannot accept, with stable error codes (ADR-0020).</summary>
 public static class OrderErrors
 {
+    /// <summary>Problem details field naming the state a command was refused in, so a client can react (ADR-0020).</summary>
+    public const string CurrentStateDetail = "currentState";
+
     /// <summary>
     /// The order is past the point where the customer may cancel it. The endpoint turns this into a
     /// <c>409 Conflict</c> that names the current state and points at customer support (ADR-0017 §3).
     /// </summary>
     public static Error NotCancellable(OrderStatus status) =>
-        Error.Conflict("order-not-cancellable", $"An order in state {status} can no longer be cancelled by the customer.");
+        Error.Conflict(
+                "order-not-cancellable",
+                $"An order in state {status} can no longer be cancelled by the customer. Contact customer support.")
+            .With(CurrentStateDetail, status.ToString());
 
     /// <summary>
     /// Support may cancel one state further than the customer, but a dispatched, delivered or already closed order is
@@ -18,7 +24,8 @@ public static class OrderErrors
     /// from the customer one, which points at support and would be misleading here.
     /// </summary>
     public static Error NotCancellableBySupport(OrderStatus status) =>
-        Error.Conflict("order-not-cancellable-by-support", $"An order in state {status} can no longer be cancelled.");
+        Error.Conflict("order-not-cancellable-by-support", $"An order in state {status} can no longer be cancelled.")
+            .With(CurrentStateDetail, status.ToString());
 
     /// <summary>Reducing the order is only offered while the customer is asked to react to an inventory problem.</summary>
     public static Error ItemsNotReducible(OrderStatus status) =>

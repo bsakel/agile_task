@@ -9,7 +9,7 @@ namespace OrderPlatform.Pricing.Infrastructure.PriceLists;
 /// Reads the price lists of the <c>pricing</c> schema with Dapper and parameterised SQL (ADR-0007). The base list applies
 /// to every account; a customer-specific list overrides it per SKU (ADR-0018).
 /// </summary>
-internal sealed class PriceListReader(NpgsqlDataSource dataSource) : IPriceListReader
+public sealed class PriceListReader(NpgsqlDataSource dataSource) : IPriceListReader
 {
     // The lists that apply to this account, base list first and the customer's own list last (most specific).
     private const string SelectLists = """

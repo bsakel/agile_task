@@ -8,7 +8,7 @@ namespace OrderPlatform.Customers.Infrastructure.Accounts;
 /// <summary>
 /// Reads the local copy in the <c>customers</c> schema with Dapper and parameterised SQL (ADR-0007, ADR-0016).
 /// </summary>
-internal sealed class CustomerDirectory(NpgsqlDataSource dataSource) : ICustomerDirectory
+public sealed class CustomerDirectory(NpgsqlDataSource dataSource) : ICustomerDirectory
 {
     private const string SelectAccount = """
         select id                  as Id,

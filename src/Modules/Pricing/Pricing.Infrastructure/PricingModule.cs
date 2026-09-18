@@ -22,9 +22,11 @@ public sealed class PricingModule : IModule
     public void AddServices(IHostApplicationBuilder builder)
     {
         // The rule pipeline of ADR-0018: the pinned v1 rule list, in registration order; the pipeline orders by stage.
+        // Registered by type, not as instances, so Wolverine can build the pipeline in generated handler code instead of
+        // locating it at runtime, which static code generation does not allow (ADR-0021).
         foreach (var rule in PricingRules.V1)
         {
-            builder.Services.AddSingleton<IPricingRule>(rule);
+            builder.Services.AddSingleton(typeof(IPricingRule), rule.GetType());
         }
 
         builder.Services.AddSingleton<PricingPipeline>();

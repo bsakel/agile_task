@@ -73,6 +73,12 @@ public sealed record InvoicePartiallyPaid(
 public enum OrderAttentionReason
 {
     PartialPaymentAtDueDate = 1,
+
+    /// <summary>Money arrived for an order that was already cancelled; support decides refund or reinstatement (ADR-0017 §6).</summary>
+    LatePaymentAfterCancellation = 2,
+
+    /// <summary>A compensation step exhausted its retries; automation never retries forever (ADR-0017 §5).</summary>
+    CompensationFailed = 3,
 }
 
 /// <summary>Automation stopped; the order waits for a support agent (ADR-0017 §2).</summary>
@@ -81,3 +87,46 @@ public sealed record AttentionRequired(
     OrderAttentionReason Reason,
     string? Details,
     DateTimeOffset RaisedAt) : IDomainEvent;
+
+/// <summary>The customer reduced the order after an inventory problem; the reduced order is repriced (ADR-0017 §3).</summary>
+public sealed record OrderItemsReduced(
+    Guid OrderId,
+    IReadOnlyList<OrderLine> Lines,
+    OrderPricing Pricing,
+    DateTimeOffset ReducedAt) : IDomainEvent;
+
+/// <summary>The fulfilment system could not complete the order; the customer must correct the information (ADR-0017 §2).</summary>
+public sealed record FulfilmentFailed(Guid OrderId, string Reason, DateTimeOffset ReportedAt) : IDomainEvent;
+
+/// <summary>
+/// The customer corrected the fulfilment information. The new address and contact are stored in Customers; the order
+/// only references their ids, so no personal data reaches the stream (ADR-0016).
+/// </summary>
+public sealed record FulfilmentInformationUpdated(
+    Guid OrderId,
+    Guid ShippingAddressId,
+    Guid ContactId,
+    DateTimeOffset UpdatedAt) : IDomainEvent;
+
+/// <summary>The carrier took the shipment; from here only delivery follows (ADR-0017 §2).</summary>
+public sealed record ShipmentDispatched(Guid OrderId, string TrackingReference, DateTimeOffset DispatchedAt) : IDomainEvent;
+
+/// <summary>The carrier delivered the shipment; the order is complete.</summary>
+public sealed record ShipmentDelivered(Guid OrderId, DateTimeOffset DeliveredAt) : IDomainEvent;
+
+/// <summary>
+/// Cancelling once fulfilment has started cannot finish in one step: the shipment request is cancelled, the invoice
+/// refunded and the inventory released, and the order waits in <see cref="OrderStatus.Refunding"/> until billing
+/// confirms. The reason for the cancellation is recorded here, not on a later event (ADR-0017 §5).
+/// </summary>
+public sealed record RefundRequested(
+    Guid OrderId,
+    OrderCancellationReason Reason,
+    string? Details,
+    DateTimeOffset RequestedAt) : IDomainEvent;
+
+/// <summary>Billing confirmed the refund; the cancellation that <see cref="RefundRequested"/> started is complete.</summary>
+public sealed record RefundCompleted(Guid OrderId, string RefundReference, DateTimeOffset CompletedAt) : IDomainEvent;
+
+/// <summary>A support agent closed an order that automation had stopped on; the reason is mandatory (ADR-0017 §3).</summary>
+public sealed record AttentionResolved(Guid OrderId, string Reason, DateTimeOffset ResolvedAt) : IDomainEvent;

@@ -1,8 +1,10 @@
 using Marten;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Hosting;
 using OrderPlatform.BuildingBlocks.Infrastructure.Modules;
 using OrderPlatform.Ordering.Application;
 using OrderPlatform.Ordering.Domain;
+using OrderPlatform.Ordering.Infrastructure.Endpoints;
 using Wolverine;
 
 namespace OrderPlatform.Ordering.Infrastructure;
@@ -34,4 +36,6 @@ public sealed class OrderingModule : IModule
 
     public void ConfigureWolverine(WolverineOptions options) =>
         options.Discovery.IncludeAssembly(OrderingApplication.Assembly);
+
+    public void MapEndpoints(IEndpointRouteBuilder version) => version.MapOrderEndpoints();
 }

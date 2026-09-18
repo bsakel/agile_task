@@ -28,7 +28,7 @@ public sealed class Order
 
     public Guid Id { get; set; }
 
-    public string AccountId { get; private set; } = string.Empty;
+    public Guid AccountId { get; private set; }
 
     public OrderStatus Status { get; private set; }
 
@@ -44,7 +44,7 @@ public sealed class Order
     /// <summary>Submission decided outside the aggregate (account active, prices resolved); the process starts here.</summary>
     public static OrderDecision Submit(
         Guid orderId,
-        string accountId,
+        Guid accountId,
         IReadOnlyList<OrderLine> lines,
         OrderPricing pricing,
         Guid billingAddressId,

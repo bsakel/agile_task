@@ -1,3 +1,4 @@
+using JasperFx.Events.Projections;
 using Marten;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Hosting;
@@ -40,6 +41,11 @@ public sealed class OrderingModule : IModule
         options.Events.MapEventType<RefundRequested>("refund_requested");
         options.Events.MapEventType<RefundCompleted>("refund_completed");
         options.Events.MapEventType<AttentionResolved>("attention_resolved");
+
+        // The read model of GET /orders/{id}: inline, so an order can be read straight after it was submitted
+        // (ADR-0006). Registered explicitly, because the Migrator only creates the schema of registered types (ADR-0008).
+        options.Schema.For<OrderDetails>();
+        options.Projections.Snapshot<OrderDetails>(SnapshotLifecycle.Inline);
     }
 
     public void ConfigureWolverine(WolverineOptions options) =>

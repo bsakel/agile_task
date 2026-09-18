@@ -33,7 +33,42 @@ internal static class OrderEndpoints
             .RequireAuthorization(PlatformPolicies.CustomerAccount, PlatformScopes.OrdersWrite)
             .RequireIdempotencyKey();
 
+        version.MapGet("/orders/{id:guid}", GetAsync)
+            .WithName("GetOrder")
+            .WithTags("Orders")
+            .RequireAuthorization(PlatformPolicies.CustomerAccount, PlatformScopes.OrdersRead)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        version.MapGet("/orders/{id:guid}/history", GetHistoryAsync)
+            .WithName("GetOrderHistory")
+            .WithTags("Orders")
+            .RequireAuthorization(PlatformPolicies.CustomerAccount, PlatformScopes.OrdersRead)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         return version;
+    }
+
+    private static async Task<Results<Ok<OrderView>, ProblemHttpResult>> GetAsync(
+        Guid id,
+        ClaimsPrincipal user,
+        IMessageBus bus,
+        CancellationToken cancellationToken)
+    {
+        var result = await bus.InvokeAsync<Result<OrderView>>(new GetOrder(user.GetRequiredAccountId(), id), cancellationToken);
+
+        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Error.ToProblem();
+    }
+
+    private static async Task<Results<Ok<OrderHistoryView>, ProblemHttpResult>> GetHistoryAsync(
+        Guid id,
+        ClaimsPrincipal user,
+        IMessageBus bus,
+        CancellationToken cancellationToken)
+    {
+        var result = await bus.InvokeAsync<Result<OrderHistoryView>>(
+            new GetOrderHistory(user.GetRequiredAccountId(), id), cancellationToken);
+
+        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Error.ToProblem();
     }
 
     private static async Task<Results<Created<SubmitOrderResponse>, ValidationProblem, ProblemHttpResult>> SubmitAsync(

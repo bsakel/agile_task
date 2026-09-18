@@ -1,6 +1,6 @@
 # ADR-0018: Pricing as a rule pipeline
 
-- **Status:** Accepted
+- **Status:** Accepted — see the implementation notes below
 - **Date:** 2026-09-17
 - **Related:** README §2 (B2B assumptions), ADR-0017 (order lifecycle), ADR-0019 (feature flags)
 

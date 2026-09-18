@@ -1,6 +1,6 @@
 # ADR-0017: Order lifecycle as an event-sourced process
 
-- **Status:** Accepted
+- **Status:** Accepted — delivered in PRs 2d, 2d-2 and 2e. **One open issue: leaving `RequiresAttention` (§2a).**
 - **Date:** 2026-09-17
 - **Related:** [README §2 — B2B business assumptions](../README.md#2-domain-scope-a-b2b-ordering-platform), ADR-0005 (durable messaging), ADR-0006 (Marten), ADR-0014 (external integrations), ADR-0016 (security), ADR-0018 (pricing), ADR-0019 (feature flags), ADR-0020 (API conventions)
 
@@ -44,9 +44,37 @@ and process state.
 | `Shipped` | Dispatched by the carrier | `Delivered` |
 | `Delivered` | Terminal | — |
 | `Cancelled` | Terminal (inventory released, invoice voided or refunded) | `RequiresAttention` on late payment |
-| `RequiresAttention` | Automation stopped; a support agent must resolve (late payment, partial payment at due date, compensation failure) | Resolved manually by support actions |
+| `RequiresAttention` | Automation stopped; a support agent must resolve (late payment, partial payment at due date, compensation failure) | `Cancelled` (support resolution, §2a) |
 
 The state diagram is in [README §8](../README.md#8-order-lifecycle).
+
+### 2a. Leaving `RequiresAttention` — open issue, decide before N3
+
+**This is the one unresolved question in the lifecycle. It needs a business decision before the invoicing and payment
+next steps (N3–N6) are built, because those are what start sending orders into `RequiresAttention` in volume.**
+
+**What v1 does.** `ResolveAttention` (back office, mandatory reason) appends `AttentionResolved` and the order ends in
+`Cancelled`. Before PR 2e there was no exit at all: this section named none and the README diagram drew no outgoing
+edge, so an order that reached `RequiresAttention` could never leave it. Closing it as cancelled is the safe reading —
+every reason for attention leaves an order that is not going to be fulfilled as ordered — and it is deliberately the
+*only* exit until the question below is answered.
+
+**Why it is not settled.** §6 says support decides "refund or **reinstatement**", and reinstatement has no target state.
+It cannot have a single one, because the three reasons need different answers:
+
+| Reason for attention | What reinstatement would have to mean | Why it is not obvious |
+|---|---|---|
+| `PartialPaymentAtDueDate` | Chase the remainder → back to `AwaitingPayment` | Needs a new due date, and a second overdue timer; refunding the part payment and cancelling is the alternative |
+| `LatePaymentAfterCancellation` | Re-reserve and continue → back to `ValidatingInventory` | The inventory was already released, so the stock may be gone; the order may have to be cancelled again, refunding the payment that caused this |
+| `CompensationFailed` | Finish the compensation → back to `Refunding` | Not a reinstatement at all: the order stays cancelled, the step has to complete |
+
+**What a decision needs to cover:** which reasons may be reinstated at all, the target state for each, who is allowed to
+do it, and what happens when reinstatement itself fails (the `LatePaymentAfterCancellation` path can fail on the very
+next step). Until that is decided, support resolves by cancelling and handles the money outside the system — which is a
+real gap, not a design choice: the platform records *that* it was resolved and why, but not what was refunded.
+
+**Owner-facing summary:** back-office tooling for these orders is next step N12 and the refund/reinstatement decision is
+in the backlog; both should be taken together, and the outcome recorded here as a revision of this ADR.
 
 ### 3. Submission and API surface
 

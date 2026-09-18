@@ -1,6 +1,6 @@
 # ADR-0022: Testing strategy
 
-- **Status:** Accepted
+- **Status:** Accepted — see the implementation notes from Phases 2 and 3 below
 - **Date:** 2026-09-17
 - **Related:** ADR-0009, ADR-0014, ADR-0015, ADR-0017, ADR-0018, ADR-0019, ADR-0021
 
@@ -66,6 +66,25 @@ promise needs a test at the cheapest level that can actually prove it.
 - **No coverage percentage gate.** The "must cover" column above is the requirement, reviewed in pull requests.
 - Load and performance tests, UI end-to-end tests, mutation testing — backlog.
 - Rollback compatibility test (previous release's integration tests against the new schema) — backlog (ADR-0009).
+
+## Implementation notes from Phases 2 and 3
+
+- **Do not assert on an in-memory fake across hosts.** The Api hosts of an integration test run share one database and
+  therefore one set of durable queues, while each host has its own fake adapter (ADR-0014). A message sent by one host
+  may be handled by another, whose fake knows nothing about the call — so an assertion on the fake passes or fails
+  depending on which node picked the message up. PR 2j's release assertion failed about half the time this way, in the
+  full suite only. Assert on the **durable message log** instead (a handled envelope for that order), which every node
+  shares; the handler throws when the provider refuses, so a handled message is proof the call succeeded.
+- **Asynchronous steps are polled, never slept on.** The "must cover" table above expects message cascades to be awaited
+  with Wolverine's tracked sessions; that works when a test sends the message, but not when the cascade starts inside an
+  HTTP request the test made. Those tests poll instead: `WaitForStatusAsync` rebuilds the order from its stream until it
+  reaches the expected state, with a timeout that fails with the state it actually saw.
+- **A trace is not a test.** PR 2i's tracing test passed while the flow was broken: the spans exist even when the
+  handler throws. Assert the resulting state, and use traces for the end-to-end path, not for correctness.
+- **`FakeTimeProvider` does not belong in a resilience pipeline** — see the warning in ADR-0014.
+- Known defect: `ContractNamesTests` writes `contract-names.approved.received.txt` (via `Path.ChangeExtension`) while
+  its failure message names `contract-names.received.txt`. Cosmetic, but it sends the reader to a file that is not
+  there; in the backlog.
 
 ## Consequences
 

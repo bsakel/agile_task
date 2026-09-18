@@ -20,7 +20,9 @@ message OrderPlatform.Api.Diagnostics.EchoDiagnostics <- OrderPlatform.Api.Diagn
 message OrderPlatform.BuildingBlocks.Infrastructure.Http.Idempotency.CleanUpIdempotencyRecords <- OrderPlatform.BuildingBlocks.Infrastructure.Http.Idempotency.CleanUpIdempotencyRecords
 message OrderPlatform.Inventory.Contracts.InventoryReserved <- OrderPlatform.Inventory.Contracts.InventoryReserved
 message OrderPlatform.Inventory.Contracts.InventoryUnavailable <- OrderPlatform.Inventory.Contracts.InventoryUnavailable
+message OrderPlatform.Inventory.Contracts.ReleaseInventory <- OrderPlatform.Inventory.Contracts.ReleaseInventory
 message OrderPlatform.Inventory.Contracts.ReserveInventory <- OrderPlatform.Inventory.Contracts.ReserveInventory
+message OrderPlatform.Ordering.Application.CancelOrder <- OrderPlatform.Ordering.Application.CancelOrder
 message OrderPlatform.Ordering.Application.GetOrder <- OrderPlatform.Ordering.Application.GetOrder
 message OrderPlatform.Ordering.Application.GetOrderHistory <- OrderPlatform.Ordering.Application.GetOrderHistory
 message OrderPlatform.Ordering.Application.SubmitOrder <- OrderPlatform.Ordering.Application.SubmitOrder

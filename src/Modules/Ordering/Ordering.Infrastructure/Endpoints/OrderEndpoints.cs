@@ -33,6 +33,14 @@ internal static class OrderEndpoints
             .RequireAuthorization(PlatformPolicies.CustomerAccount, PlatformScopes.OrdersWrite)
             .RequireIdempotencyKey();
 
+        version.MapPost("/orders/{id:guid}/cancel", CancelAsync)
+            .WithName("CancelOrder")
+            .WithTags("Orders")
+            .RequireAuthorization(PlatformPolicies.CustomerAccount, PlatformScopes.OrdersCancel)
+            .RequireIdempotencyKey()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
         version.MapGet("/orders/{id:guid}", GetAsync)
             .WithName("GetOrder")
             .WithTags("Orders")
@@ -46,6 +54,24 @@ internal static class OrderEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         return version;
+    }
+
+    /// <summary>
+    /// Cancellation is accepted, not completed: the compensation runs through the outbox, so the order reaches
+    /// <c>Cancelled</c> once every step has been undone (ADR-0017 §5, ADR-0020 long-running operations).
+    /// </summary>
+    private static async Task<Results<Accepted<CancelOrderResponse>, ProblemHttpResult>> CancelAsync(
+        Guid id,
+        ClaimsPrincipal user,
+        IMessageBus bus,
+        CancellationToken cancellationToken)
+    {
+        var result = await bus.InvokeAsync<Result<CancelOrderResponse>>(
+            new CancelOrder(user.GetRequiredAccountId(), id), cancellationToken);
+
+        return result.IsSuccess
+            ? TypedResults.Accepted($"/v1/orders/{id}", result.Value)
+            : result.Error.ToProblem();
     }
 
     private static async Task<Results<Ok<OrderView>, ProblemHttpResult>> GetAsync(

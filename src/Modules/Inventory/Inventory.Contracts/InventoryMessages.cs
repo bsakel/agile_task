@@ -26,3 +26,9 @@ public sealed record InventoryUnavailable(
     Guid OrderId,
     IReadOnlyList<string> UnavailableSkus,
     DateTimeOffset ReportedAt) : IIntegrationEvent;
+
+/// <summary>
+/// Releases a reservation the order no longer needs, identified by the key it was made under. Sent when an order is
+/// cancelled, and when a reservation completes after the cancellation (ADR-0017 §5 and §6).
+/// </summary>
+public sealed record ReleaseInventory(Guid OrderId, string ReservationKey) : ICommand;

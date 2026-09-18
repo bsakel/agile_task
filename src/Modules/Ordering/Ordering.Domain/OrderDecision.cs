@@ -9,6 +9,7 @@ public enum OrderFollowUp
     ReserveInventory = 1,
     ReleaseInventory = 2,
     IssueInvoice = 3,
+    VoidInvoice = 4,
 }
 
 /// <summary>

@@ -1,7 +1,11 @@
 # Stored message type names (Wolverine) and event aliases (Marten), pinned by ContractNamesTests (ADR-0010).
 # Never change an existing line: keep the stored name with an explicit alias instead. New lines are reviewed additions.
+event attention_required <- OrderPlatform.Ordering.Domain.AttentionRequired
 event inventory_reserved <- OrderPlatform.Ordering.Domain.InventoryReserved
 event inventory_unavailable <- OrderPlatform.Ordering.Domain.InventoryUnavailable
+event invoice_issued <- OrderPlatform.Ordering.Domain.InvoiceIssued
+event invoice_paid <- OrderPlatform.Ordering.Domain.InvoicePaid
+event invoice_partially_paid <- OrderPlatform.Ordering.Domain.InvoicePartiallyPaid
 event order_cancelled <- OrderPlatform.Ordering.Domain.OrderCancelled
 event order_submitted <- OrderPlatform.Ordering.Domain.OrderSubmitted
 message OrderPlatform.Api.Diagnostics.EchoDiagnostics <- OrderPlatform.Api.Diagnostics.EchoDiagnostics

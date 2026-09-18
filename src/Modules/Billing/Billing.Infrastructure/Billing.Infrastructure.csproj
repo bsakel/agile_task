@@ -1,6 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Persistence, adapters to external systems, endpoints and the module registration. -->
   <ItemGroup>
+    <!-- Resilience pipeline of the billing HTTP adapter (ADR-0014). -->
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Billing.Application\Billing.Application.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\OrderPlatform.BuildingBlocks.Infrastructure\OrderPlatform.BuildingBlocks.Infrastructure.csproj" />
   </ItemGroup>

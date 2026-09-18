@@ -52,6 +52,10 @@ public static class BillingErrors
     /// <summary>Provider down or call timed out; the caller retries on the Wolverine schedule (ADR-0014).</summary>
     public static Error ProviderUnavailable(string detail) => Error.Integration("billing-provider-unavailable", detail);
 
+    /// <summary>The provider refused the call, e.g. a settled invoice that cannot be voided; sending it again will not help.</summary>
+    public static Error ProviderRejected(string providerCode, string detail) =>
+        Error.Conflict("billing-provider-rejected", $"The billing system rejected the call ({providerCode}): {detail}");
+
     public static Error InvoiceNotFound(string invoiceId) =>
         Error.NotFound("billing-invoice-not-found", $"The billing system does not know invoice '{invoiceId}'.");
 

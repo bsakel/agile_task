@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using OrderPlatform.Billing.Application;
 using OrderPlatform.Billing.Application.Integration;
 using OrderPlatform.Billing.Infrastructure.Fakes;
+using OrderPlatform.Billing.Infrastructure.Http;
 using OrderPlatform.BuildingBlocks.Infrastructure.Integrations;
 using OrderPlatform.BuildingBlocks.Infrastructure.Modules;
 using Wolverine;
@@ -21,12 +22,14 @@ public sealed class BillingModule : IModule
 
     public void AddServices(IHostApplicationBuilder builder)
     {
-        // The HTTP adapter arrives with PR 3c; until then Http mode registers no gateway, so the host still starts
-        // (the ADR-0014 guard keeps the fake out of deployed environments) and only a caller would fail to resolve it.
         if (builder.Configuration.GetIntegrationMode(IntegrationName) is IntegrationMode.Fake)
         {
             builder.Services.Configure<FakeBillingOptions>(builder.Configuration.GetSection(FakeBillingOptions.SectionName));
             builder.Services.AddSingleton<IBillingGateway, FakeBillingGateway>();
+        }
+        else
+        {
+            builder.Services.AddBillingHttpGateway(builder.Configuration);
         }
     }
 

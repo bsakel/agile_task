@@ -57,7 +57,8 @@
     <Project Path="tests/OrderPlatform.AppHost.Tests/OrderPlatform.AppHost.Tests.csproj" />
     <Project Path="tests/OrderPlatform.Architecture.Tests/OrderPlatform.Architecture.Tests.csproj" />
     <Project Path="tests/OrderPlatform.Migrations.Tests/OrderPlatform.Migrations.Tests.csproj" />
-    <Project Path="tests/Ordering.Domain.Tests/Ordering.Domain.Tests.csproj" />
     <Project Path="tests/OrderPlatform.Testing/OrderPlatform.Testing.csproj" />
+    <Project Path="tests/Ordering.Domain.Tests/Ordering.Domain.Tests.csproj" />
+    <Project Path="tests/Pricing.Domain.Tests/Pricing.Domain.Tests.csproj" />
   </Folder>
 </Solution>

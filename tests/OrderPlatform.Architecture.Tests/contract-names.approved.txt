@@ -1,13 +1,21 @@
 # Stored message type names (Wolverine) and event aliases (Marten), pinned by ContractNamesTests (ADR-0010).
 # Never change an existing line: keep the stored name with an explicit alias instead. New lines are reviewed additions.
 event attention_required <- OrderPlatform.Ordering.Domain.AttentionRequired
+event attention_resolved <- OrderPlatform.Ordering.Domain.AttentionResolved
+event fulfilment_failed <- OrderPlatform.Ordering.Domain.FulfilmentFailed
+event fulfilment_information_updated <- OrderPlatform.Ordering.Domain.FulfilmentInformationUpdated
 event inventory_reserved <- OrderPlatform.Ordering.Domain.InventoryReserved
 event inventory_unavailable <- OrderPlatform.Ordering.Domain.InventoryUnavailable
 event invoice_issued <- OrderPlatform.Ordering.Domain.InvoiceIssued
 event invoice_paid <- OrderPlatform.Ordering.Domain.InvoicePaid
 event invoice_partially_paid <- OrderPlatform.Ordering.Domain.InvoicePartiallyPaid
 event order_cancelled <- OrderPlatform.Ordering.Domain.OrderCancelled
+event order_items_reduced <- OrderPlatform.Ordering.Domain.OrderItemsReduced
 event order_submitted <- OrderPlatform.Ordering.Domain.OrderSubmitted
+event refund_completed <- OrderPlatform.Ordering.Domain.RefundCompleted
+event refund_requested <- OrderPlatform.Ordering.Domain.RefundRequested
+event shipment_delivered <- OrderPlatform.Ordering.Domain.ShipmentDelivered
+event shipment_dispatched <- OrderPlatform.Ordering.Domain.ShipmentDispatched
 message OrderPlatform.Api.Diagnostics.EchoDiagnostics <- OrderPlatform.Api.Diagnostics.EchoDiagnostics
 message OrderPlatform.BuildingBlocks.Infrastructure.Http.Idempotency.CleanUpIdempotencyRecords <- OrderPlatform.BuildingBlocks.Infrastructure.Http.Idempotency.CleanUpIdempotencyRecords
 message OrderPlatform.Inventory.Contracts.InventoryReserved <- OrderPlatform.Inventory.Contracts.InventoryReserved

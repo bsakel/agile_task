@@ -32,6 +32,14 @@ public sealed class OrderingModule : IModule
         options.Events.MapEventType<InvoicePartiallyPaid>("invoice_partially_paid");
         options.Events.MapEventType<AttentionRequired>("attention_required");
         options.Events.MapEventType<OrderCancelled>("order_cancelled");
+        options.Events.MapEventType<OrderItemsReduced>("order_items_reduced");
+        options.Events.MapEventType<FulfilmentFailed>("fulfilment_failed");
+        options.Events.MapEventType<FulfilmentInformationUpdated>("fulfilment_information_updated");
+        options.Events.MapEventType<ShipmentDispatched>("shipment_dispatched");
+        options.Events.MapEventType<ShipmentDelivered>("shipment_delivered");
+        options.Events.MapEventType<RefundRequested>("refund_requested");
+        options.Events.MapEventType<RefundCompleted>("refund_completed");
+        options.Events.MapEventType<AttentionResolved>("attention_resolved");
     }
 
     public void ConfigureWolverine(WolverineOptions options) =>
